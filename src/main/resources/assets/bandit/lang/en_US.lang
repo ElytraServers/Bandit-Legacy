@@ -1,0 +1,32 @@
+bandit.executor.manhattan=Manhattan
+bandit.executor.manhattan-plus=Manhattan+
+bandit.executor.large-scan=Large-scan
+bandit.executor.cached=Unknown <cached>
+
+bandit.block-filter.all=All
+bandit.block-filter.none=None
+bandit.block-filter.match-block=Matching Block
+bandit.block-filter.match-block-and-meta=Matching Block and Metadata
+
+bandit.message.task-starting=§aStarting Vein Mining task
+bandit.message.task-halt-hint=§aYou can type §6/bandit stop §ato halt a ongoing task
+bandit.message.task-done=§aVein Mining done! §7Harvested %s §7blocks, and dropped %s §7items.
+
+bandit.message.sync-from-server=§7Updated your settings to %s §7and %s
+
+bandit.message.activating=§aActivating
+bandit.message.precalculated=§3Selected: %s
+
+command.bandit.usage=/bandit help
+command.bandit.help.0=§6/bandit executor [executorId] - §7list or set the executors
+command.bandit.help.1=§6/bandit filter [blockFilterId] - §7list or set the block filters
+command.bandit.executor.current=You are currently using %s
+command.bandit.executor.list=Possible Executors:
+command.bandit.executor.list.entry=%s %s
+command.bandit.executor.set.ok=OK!
+command.bandit.executor.set.fail=Failed! Possibly it is an invalid id.
+command.bandit.filter.current=You are currently using %s
+command.bandit.filter.list=Possible Filters:
+command.bandit.filter.list.entry=%s %s
+command.bandit.filter.set.ok=OK!
+command.bandit.filter.set.fail=Failed! Possibly it is an invalid id.
