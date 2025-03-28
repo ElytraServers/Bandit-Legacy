@@ -9,6 +9,7 @@ import java.util.*
 import kotlin.math.pow
 
 class ManhattanExecutorGenerator(
+    val name: String,
     maxManhattanRange: Int,
     val plusMode: Boolean = false,
 ) : SequencedVeinMiningExecutorGenerator() {
@@ -51,7 +52,7 @@ class ManhattanExecutorGenerator(
     }
 
     override fun getUnlocalizedName(): String {
-        return if(plusMode) "bandit.executor.manhattan-plus" else "bandit.executor.manhattan"
+        return name
     }
 
     /**

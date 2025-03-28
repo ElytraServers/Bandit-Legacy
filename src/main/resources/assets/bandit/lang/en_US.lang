@@ -1,7 +1,7 @@
 bandit.executor.manhattan=Manhattan
 bandit.executor.manhattan-plus=Manhattan+
+bandit.executor.manhattan-large=Manhattan(L)
 bandit.executor.large-scan=Large-scan
-bandit.executor.cached=Unknown <cached>
 
 bandit.block-filter.all=All
 bandit.block-filter.none=None

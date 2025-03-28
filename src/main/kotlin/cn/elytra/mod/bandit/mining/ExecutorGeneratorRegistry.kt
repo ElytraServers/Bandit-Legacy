@@ -9,9 +9,10 @@ object ExecutorGeneratorRegistry {
     private val executorGeneratorMap = mutableMapOf<Int, VeinMiningExecutorGenerator>()
 
     init {
-        executorGeneratorMap[0] = ManhattanExecutorGenerator(8)
-        executorGeneratorMap[1] = ManhattanExecutorGenerator(8, true)
+        executorGeneratorMap[0] = ManhattanExecutorGenerator("bandit.executor.manhattan", 8)
+        executorGeneratorMap[1] = ManhattanExecutorGenerator("bandit.executor.manhattan-plus", 8, true)
         executorGeneratorMap[2] = LargeScanExecutorGenerator(32)
+        executorGeneratorMap[3] = ManhattanExecutorGenerator("bandit.executor.manhattan-large", 16, true)
     }
 
     @Suppress("unused")
