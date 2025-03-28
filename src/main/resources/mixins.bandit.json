@@ -1,6 +1,11 @@
 {
   "required": true,
+  "minVersion": "0.8.3-GTNH",
   "package": "cn.elytra.mod.bandit.mixin",
+  "refmap": "mixins.bandit.refmap.json",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "MinecraftServerMixin"
   ]
 }

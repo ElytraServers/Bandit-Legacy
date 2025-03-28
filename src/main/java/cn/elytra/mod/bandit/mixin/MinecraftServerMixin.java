@@ -10,9 +10,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
 
-    @Inject(method = "tick", at = @At("HEAD"))
-    private void hook$tick(CallbackInfo ci) {
-        BanditCoroutines.INSTANCE.getTicking().update();
+    @Inject(method = "updateTimeLightAndEntities", at = @At("HEAD"))
+    private void bandit$hookTick(CallbackInfo ci) {
+        BanditCoroutines.INSTANCE.getTicking().run();
     }
 
 }

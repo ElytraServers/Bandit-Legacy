@@ -59,7 +59,7 @@ object BanditCoroutines {
      * @see initServer
      * @see callFromMainThread
      */
-    val ticking = IUpdatePlayerListBox {
+    val ticking = Runnable {
         synchronized(jobQueue) {
             while(jobQueue.isNotEmpty()) {
                 val task = jobQueue.poll()
