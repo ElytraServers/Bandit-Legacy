@@ -30,3 +30,6 @@ command.bandit.filter.list=Possible Filters:
 command.bandit.filter.list.entry=%s %s
 command.bandit.filter.set.ok=OK!
 command.bandit.filter.set.fail=Failed! Possibly it is an invalid id.
+
+keybinding.bandit.category=Bandit Vein Mining
+keybinding.bandit.trigger=Vein Mining Trigger

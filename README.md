@@ -15,7 +15,7 @@ And when you press the key you just bind, you'll see some information on the top
 In this state, you can start the vein mining. But I'd recommend you to customize the settings first.
 
 Pressing the key with either Shift or Ctrl will open a menu, selecting the Executor (or Scanning Mode in general) and
-the Block Filter.
+the Block Filter, by mouse scrolling.
 
 Keep in mind, the vein mining task won't stop even if your Pickaxe in hand is broken. So get a tool that has
 enough durability before starting the vein mining. Also, you can change the tool in hand while vein mining.
