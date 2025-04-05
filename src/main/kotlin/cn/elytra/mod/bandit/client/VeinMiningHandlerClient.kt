@@ -1,6 +1,7 @@
 package cn.elytra.mod.bandit.client
 
 import cn.elytra.mod.bandit.BanditMod
+import cn.elytra.mod.bandit.MixinBridger
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.keyPressed
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.onMouseInput
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.veinMiningBlockFilterId
@@ -10,13 +11,11 @@ import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber
 import cpw.mods.fml.client.event.ConfigChangedEvent
 import cpw.mods.fml.common.eventhandler.SubscribeEvent
-import cpw.mods.fml.common.gameevent.InputEvent
 import cpw.mods.fml.common.gameevent.TickEvent
 import net.minecraft.client.Minecraft
 import net.minecraft.client.settings.KeyBinding
 import net.minecraftforge.client.event.RenderWorldLastEvent
 import org.lwjgl.input.Keyboard
-import org.lwjgl.input.Mouse
 
 /**
  * The object that handles all the things about Vein Mining on the client side.
@@ -54,6 +53,11 @@ object VeinMiningHandlerClient {
      */
     var maxSelectionRenderCount = 1024
 
+    init {
+        // register the callback
+        MixinBridger.onMouseScrollCancelable += this::onMouseInput
+    }
+
     @JvmStatic
     @SubscribeEvent
     fun onClientTick(e: TickEvent.ClientTickEvent) {
@@ -67,17 +71,17 @@ object VeinMiningHandlerClient {
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
-    fun onMouseInput(e: InputEvent.MouseInputEvent) {
-        val d = Mouse.getEventDWheel()
+    fun onMouseInput(d: Int): Boolean {
         VeinMiningHUD.withActiveMenu {
             if(d < 0) {
                 this.move(1)
+                return true
             } else if (d > 0) {
                 this.move(-1)
+                return true
             }
         }
+        return false
     }
 
     @JvmStatic

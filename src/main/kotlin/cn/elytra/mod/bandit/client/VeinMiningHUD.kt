@@ -144,7 +144,7 @@ object VeinMiningHUD {
     private fun drawExecutorSelectionMenu(heightBase: Int) = drawCircleList(executors, heightBase)
     private fun drawBlockFilterSelectionMenu(heightBase: Int) = drawCircleList(blockFilters, heightBase)
 
-    internal fun withActiveMenu(block: CircleList<*>.() -> Unit) {
+    internal inline fun withActiveMenu(block: CircleList<*>.() -> Unit) {
         activeMenu?.let(block)
     }
 
