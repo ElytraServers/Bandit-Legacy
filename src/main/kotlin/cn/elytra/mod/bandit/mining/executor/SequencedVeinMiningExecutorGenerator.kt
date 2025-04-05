@@ -8,6 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import net.minecraft.entity.item.EntityXPOrb
+import net.minecraft.util.Vec3
 
 abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerator, BlockPosCacheableExecutorGenerator {
 
@@ -44,9 +45,8 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
 
         // spawn drops
         drops.forEach {
-            VeinMiningExecutorGenerator.spawnItemAsEntity(
-                world, context.player.getPosition(1.0F), it
-            )
+            val p = Vec3.createVectorHelper(context.player.posX, context.player.posY, context.player.posZ)
+            VeinMiningExecutorGenerator.spawnItemAsEntity(world, p, it)
         }
         // spawn xp orbs
         if(xpValue > 0) {
