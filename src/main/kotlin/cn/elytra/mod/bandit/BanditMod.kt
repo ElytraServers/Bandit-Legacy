@@ -13,7 +13,8 @@ import org.apache.logging.log4j.Logger
     modid = BanditMod.MOD_ID,
     name = BanditMod.NAME,
     version = Tags.VERSION,
-    modLanguageAdapter = "net.shadowfacts.forgelin.KotlinAdapter"
+    modLanguageAdapter = "net.shadowfacts.forgelin.KotlinAdapter",
+    guiFactory = "cn.elytra.mod.bandit.client.BanditConfigGuiFactory",
 )
 object BanditMod {
 

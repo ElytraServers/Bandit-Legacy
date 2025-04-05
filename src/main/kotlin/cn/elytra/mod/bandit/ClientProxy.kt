@@ -1,5 +1,6 @@
 package cn.elytra.mod.bandit
 
+import cn.elytra.mod.bandit.client.VeinMiningConfigClient
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient
 import cpw.mods.fml.client.registry.ClientRegistry
 import cpw.mods.fml.common.event.FMLPreInitializationEvent
@@ -12,6 +13,8 @@ class ClientProxy : CommonProxy() {
 
         BanditMod.logger.info("Initializing keybindings")
         ClientRegistry.registerKeyBinding(VeinMiningHandlerClient.statusKey)
+
+        VeinMiningConfigClient.save() // load and save config
     }
 
     override fun serverStopping(event: FMLServerStoppingEvent) {

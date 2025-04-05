@@ -1,5 +1,6 @@
 package cn.elytra.mod.bandit.client
 
+import cn.elytra.mod.bandit.BanditMod
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.keyPressed
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.onMouseInput
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.veinMiningBlockFilterId
@@ -7,6 +8,7 @@ import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.veinMiningExecutorId
 import cn.elytra.mod.bandit.network.BanditNetwork
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber
+import cpw.mods.fml.client.event.ConfigChangedEvent
 import cpw.mods.fml.common.eventhandler.SubscribeEvent
 import cpw.mods.fml.common.gameevent.InputEvent
 import cpw.mods.fml.common.gameevent.TickEvent
@@ -95,6 +97,16 @@ object VeinMiningHandlerClient {
             if(selectedBlockPosList.size <= maxSelectionRenderCount) {
                 VeinMiningSelectionRenderer.render(e, selectedBlockPosList)
             }
+        }
+    }
+
+    @JvmStatic
+    @SubscribeEvent
+    fun onConfigReloaded(e: ConfigChangedEvent.PostConfigChangedEvent) {
+        if(e.modID == BanditMod.MOD_ID) {
+            BanditMod.logger.info("Refreshing configuration")
+            VeinMiningConfigClient.reload()
+            VeinMiningConfigClient.save()
         }
     }
 

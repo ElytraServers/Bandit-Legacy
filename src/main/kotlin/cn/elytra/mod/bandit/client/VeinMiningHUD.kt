@@ -10,14 +10,16 @@ import cn.elytra.mod.bandit.util.CircleList
 import codechicken.lib.gui.GuiDraw
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.resources.I18n
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL12.GL_RESCALE_NORMAL
 
 object VeinMiningHUD {
 
-    private const val EDGE_X = 20
-    private const val EDGE_Y = 20
+    private val pos get() = VeinMiningConfigClient.menuPosition
+    private val marginX get() = VeinMiningConfigClient.menuMarginX
+    private val marginY get() = VeinMiningConfigClient.menuMarginY
 
     private val executors: CircleList<Pair<Int, VeinMiningExecutorGenerator>> = ExecutorGeneratorCircleList
     private val blockFilters: CircleList<Pair<Int, VeinMiningBlockFilter>> = BlockFilterCircleList
@@ -54,61 +56,93 @@ object VeinMiningHUD {
             glDisable(GL_LIGHTING)
             glDisable(GL_DEPTH_TEST)
 
-            GuiDraw.drawString(I18n.format("bandit.message.activating"), EDGE_X, EDGE_Y, -1)
-
+            var y = marginY
+            drawStringWithMargin(I18n.format("bandit.message.activating"), marginX, y)
+            y += 9 // font height
             activeMenu = if(GuiScreen.isShiftKeyDown()) {
-                drawExecutorSelectionMenu()
+                drawExecutorSelectionMenu(y)
                 executors
             } else if(GuiScreen.isCtrlKeyDown()) {
-                drawBlockFilterSelectionMenu()
+                drawBlockFilterSelectionMenu(y)
                 blockFilters
             } else {
                 null
             }
-
+            y += 27 // list height
             VeinMiningHandlerClient.selectedBlockPosList?.let {
-                GuiDraw.drawString(
-                    I18n.format("bandit.message.precalculated", it.size),
-                    EDGE_X,
-                    EDGE_Y + 30 + 8 * 3,
-                    -1,
-                )
+                drawStringWithMargin(I18n.format("bandit.message.precalculated", it.size), marginX, y)
             }
+            // y += 9 // font height
 
             glEnable(GL_RESCALE_NORMAL)
         }
     }
 
-    private fun <K, V : HasUnlocalizedName> drawCircleList(circleList: CircleList<Pair<K, V>>) {
+    private fun getPosXWithMargin(margin: Int, str: String): Int {
+        val mc = Minecraft.getMinecraft()
+        val textRender = mc.fontRenderer
+        val scaler = ScaledResolution(mc, mc.displayWidth, mc.displayHeight)
+
+        return when(pos) {
+            VeinMiningConfigClient.MenuPosition.TOP_LEFT,
+            VeinMiningConfigClient.MenuPosition.BOTTOM_LEFT,
+                -> margin
+
+            VeinMiningConfigClient.MenuPosition.TOP_RIGHT,
+            VeinMiningConfigClient.MenuPosition.BOTTOM_RIGHT,
+                -> scaler.scaledWidth - margin - textRender.getStringWidth(str)
+        }
+    }
+
+    private fun getPosYWithMargin(margin: Int, str: String): Int {
+        val mc = Minecraft.getMinecraft()
+        val textRender = mc.fontRenderer
+        val scaler = ScaledResolution(mc, mc.displayWidth, mc.displayHeight)
+
+        return when(pos) {
+            VeinMiningConfigClient.MenuPosition.TOP_LEFT,
+            VeinMiningConfigClient.MenuPosition.TOP_RIGHT,
+                -> margin
+
+            VeinMiningConfigClient.MenuPosition.BOTTOM_LEFT,
+            VeinMiningConfigClient.MenuPosition.BOTTOM_RIGHT,
+                -> scaler.scaledHeight - margin - textRender.FONT_HEIGHT
+        }
+    }
+
+    private fun drawStringWithMargin(str: String, marginX: Int, marginY: Int, color: Int = -1, shadow: Boolean = true) {
+        val x = getPosXWithMargin(marginX, str)
+        val y = getPosYWithMargin(marginY, str)
+        GuiDraw.drawString(str, x, y, color, shadow)
+    }
+
+    private fun <K, V : HasUnlocalizedName> drawCircleList(circleList: CircleList<Pair<K, V>>, y: Int) {
         val prev = circleList.prev()
         val curr = circleList.curr()
         val next = circleList.next()
 
-        GuiDraw.drawString(
+        drawStringWithMargin(
             " ${I18n.format(prev.second.getUnlocalizedName())} ",
-            EDGE_X,
-            EDGE_Y + 25 + 8 * 0,
+            marginX,
+            y,
             0xFFA0A0A0.toInt(),
-            true
         )
-        GuiDraw.drawString(
+        drawStringWithMargin(
             ">${I18n.format(curr.second.getUnlocalizedName())}<",
-            EDGE_X,
-            EDGE_Y + 25 + 8 * 1,
+            marginX,
+            y + 9,
             0xFFFFFFFF.toInt(),
-            true
         )
-        GuiDraw.drawString(
+        drawStringWithMargin(
             " ${I18n.format(next.second.getUnlocalizedName())} ",
-            EDGE_X,
-            EDGE_Y + 25 + 8 * 2,
+            marginX,
+            y + 9 + 9,
             0xFFA0A0A0.toInt(),
-            true
         )
     }
 
-    private fun drawExecutorSelectionMenu() = drawCircleList(executors)
-    private fun drawBlockFilterSelectionMenu() = drawCircleList(blockFilters)
+    private fun drawExecutorSelectionMenu(heightBase: Int) = drawCircleList(executors, heightBase)
+    private fun drawBlockFilterSelectionMenu(heightBase: Int) = drawCircleList(blockFilters, heightBase)
 
     internal fun withActiveMenu(block: CircleList<*>.() -> Unit) {
         activeMenu?.let(block)
