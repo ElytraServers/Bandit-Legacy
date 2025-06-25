@@ -48,22 +48,25 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
             val p = Vec3.createVectorHelper(context.player.posX, context.player.posY, context.player.posZ)
             VeinMiningExecutorGenerator.spawnItemAsEntity(world, p, it)
         }
-        // spawn xp orbs
+        // record dropped experiences
         if(xpValue > 0) {
-            var xpRemaining = xpValue
-            while(xpRemaining > 0) {
-                val xpSplit = EntityXPOrb.getXPSplit(xpRemaining)
-                xpRemaining -= xpSplit
-                world.spawnEntityInWorld(
-                    EntityXPOrb(world, context.player.posX, context.player.posY, context.player.posZ, xpRemaining)
-                )
-            }
-
             context.statXpValueCollected.addAndGet(xpValue)
         }
 
         context.statBlocksMined.getAndAdd(1)
         context.statItemsCollected.getAndAdd(drops.sumOf { it.stackSize })
+    }
+
+    protected open fun onBlockHarvestDone(context: VeinMiningContext) {
+        // spawn xp orbs when finishing
+        var xpValueRemaining = context.statXpValueCollected.get()
+        while(xpValueRemaining > 0) {
+            val xpSplit = EntityXPOrb.getXPSplit(xpValueRemaining)
+            xpValueRemaining -= xpSplit
+            context.world.spawnEntityInWorld(
+                EntityXPOrb(context.world, context.player.posX, context.player.posY, context.player.posZ, xpSplit)
+            )
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -80,6 +83,8 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
                         blockPosChunk.forEach { doBlockHarvestOn(context, it) }
                     }
                 }
+            // do the clean-up
+            onBlockHarvestDone(context)
         }
     }
 }
