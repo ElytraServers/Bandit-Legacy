@@ -2,12 +2,14 @@ package cn.elytra.mod.bandit.mining.executor
 
 import cn.elytra.mod.bandit.common.BanditCoroutines
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext
+import cn.elytra.mod.bandit.common.mining.VeinMiningContext.DropPosition
 import cn.elytra.mod.bandit.mining.HarvestCollector
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import net.minecraft.entity.item.EntityXPOrb
+import net.minecraft.item.ItemStack
 import net.minecraft.util.Vec3
 
 abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerator, BlockPosCacheableExecutorGenerator {
@@ -38,33 +40,98 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
      * safe to do anything!
      */
     protected open fun doBlockHarvestOn(context: VeinMiningContext, pos: BlockPos) {
-        val world = context.world
         val (drops, xpValue) = HarvestCollector.withHarvestCollectorScope {
             context.player.theItemInWorldManager.tryHarvestBlock(pos.x, pos.y, pos.z)
         }
 
-        // spawn drops
-        drops.forEach {
-            val p = Vec3.createVectorHelper(context.player.posX, context.player.posY, context.player.posZ)
-            VeinMiningExecutorGenerator.spawnItemAsEntity(world, p, it)
-        }
-        // record dropped experiences
-        if(xpValue > 0) {
-            context.statXpValueCollected.addAndGet(xpValue)
+        when(context.harvestedDropTiming) {
+            VeinMiningContext.DropTiming.IMMEDIATELY -> {
+                dropItemAt(context, drops)
+                dropXpAt(context, xpValue)
+            }
+
+            VeinMiningContext.DropTiming.ITEM_IMMEDIATELY_XP_EVENTUALLY -> {
+                dropItemAt(context, drops)
+            }
+
+            VeinMiningContext.DropTiming.EVENTUALLY -> {
+            }
         }
 
         context.statBlocksMined.getAndAdd(1)
-        context.statItemsCollected.getAndAdd(drops.sumOf { it.stackSize })
+        drops.forEach { drop ->
+            context.statItemDropped.merge(drop, drop.stackSize) { existing, new -> existing + new }
+        }
+        context.statXpValueCollected.addAndGet(xpValue)
     }
 
+    /**
+     * Invoked at the end of the vein mining, which is used to handle the finalization like dropping harvested objects
+     * if the context prefers. This function is called in Server Thread, so it is safe to do anything!
+     */
     protected open fun onBlockHarvestDone(context: VeinMiningContext) {
-        // spawn xp orbs when finishing
-        var xpValueRemaining = context.statXpValueCollected.get()
+        when(context.harvestedDropTiming) {
+            VeinMiningContext.DropTiming.IMMEDIATELY -> {
+            }
+
+            VeinMiningContext.DropTiming.ITEM_IMMEDIATELY_XP_EVENTUALLY -> {
+                dropXpAt(context, context.statXpValueCollected.get())
+            }
+
+            VeinMiningContext.DropTiming.EVENTUALLY -> {
+                dropItemAt(
+                    context,
+                    context.statItemDropped.map { (itemstack, amount) ->
+                        itemstack.copy().also { it.stackSize = amount }
+                    })
+                dropXpAt(context, context.statXpValueCollected.get())
+            }
+        }
+    }
+
+    /**
+     * Return the drop position for the given context.
+     *
+     * @see dropItemAt
+     * @see dropXpAt
+     */
+    protected fun getDropPosition(context: VeinMiningContext): Vec3 {
+        return when(context.harvestedDropPosition) {
+            DropPosition.DROP_AT_START -> Vec3.createVectorHelper(
+                context.center.x.toDouble(),
+                context.center.y.toDouble(),
+                context.center.z.toDouble()
+            )
+
+            DropPosition.DROP_TO_PLAYER -> Vec3.createVectorHelper(
+                context.player.posX,
+                context.player.posY,
+                context.player.posZ
+            )
+        }
+    }
+
+    /**
+     * Drop the harvested items to the place where the context gives.
+     */
+    protected open fun dropItemAt(context: VeinMiningContext, items: List<ItemStack>) {
+        val pos = getDropPosition(context)
+        items.forEach { item ->
+            VeinMiningExecutorGenerator.spawnItemAsEntity(context.world, pos, item)
+        }
+    }
+
+    /**
+     * Drop the experience orbs with given value to the place where the context gives.
+     */
+    protected open fun dropXpAt(context: VeinMiningContext, xpValue: Int) {
+        val pos = getDropPosition(context)
+        var xpValueRemaining = xpValue
         while(xpValueRemaining > 0) {
             val xpSplit = EntityXPOrb.getXPSplit(xpValueRemaining)
             xpValueRemaining -= xpSplit
             context.world.spawnEntityInWorld(
-                EntityXPOrb(context.world, context.player.posX, context.player.posY, context.player.posZ, xpSplit)
+                EntityXPOrb(context.world, pos.xCoord, pos.yCoord, pos.zCoord, xpSplit)
             )
         }
     }

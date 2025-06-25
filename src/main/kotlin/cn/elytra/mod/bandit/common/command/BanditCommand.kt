@@ -1,6 +1,9 @@
 package cn.elytra.mod.bandit.common.command
 
+import cn.elytra.mod.bandit.common.mining.VeinMiningContext.DropPosition
+import cn.elytra.mod.bandit.common.mining.VeinMiningContext.DropTiming
 import cn.elytra.mod.bandit.common.player_data.veinMiningData
+import cn.elytra.mod.bandit.common.util.parseValueToEnum
 import cn.elytra.mod.bandit.mining.BlockFilterRegistry
 import cn.elytra.mod.bandit.mining.ExecutorGeneratorRegistry
 import net.minecraft.command.CommandBase
@@ -23,6 +26,8 @@ object BanditCommand : CommandBase() {
             "executor", "executor-generator" -> handleExecutorSettings(sender, args)
             "filter", "block-filter" -> handleBlockFilterSettings(sender, args)
             "stop", "halt" -> handleHaltRequest(sender)
+            "drop_pos" -> handleDropPos(sender, args)
+            "drop_timing" -> handleDropTiming(sender, args)
             else -> handleHelp(sender)
         }
     }
@@ -103,7 +108,7 @@ object BanditCommand : CommandBase() {
     }
 
     private fun handleHelp(sender: ICommandSender) {
-        for(i in 0..1) {
+        for(i in 0..3) {
             sender.addChatMessage(ChatComponentTranslation("command.bandit.help.$i"))
         }
     }
@@ -111,6 +116,75 @@ object BanditCommand : CommandBase() {
     private fun handleHaltRequest(sender: ICommandSender) {
         sender.withEntityPlayer { p ->
             p.veinMiningData.stopJob("stop command")
+        }
+    }
+
+    private inline fun <reified T : Enum<T>> getValidEnumValues(): List<String> {
+        return enumValues<T>().map { it.name.lowercase() }
+    }
+
+    private fun handleDropPos(
+        sender: ICommandSender,
+        args: MutableList<String>,
+    ) {
+        sender.withEntityPlayer { p ->
+            if(args.isEmpty()) {
+                sender.addChatMessage(
+                    ChatComponentTranslation(
+                        "command.bandit.drop_pos",
+                        p.veinMiningData.harvestedDropPosition.toChatComponent(),
+                        getValidEnumValues<DropPosition>().joinToString()
+                    )
+                )
+            } else {
+                when(val value = parseValueToEnum<DropPosition>(args[0])) {
+                    null -> {
+                        p.addChatMessage(
+                            ChatComponentTranslation(
+                                "command.bandit.drop_pos.invalid_argument",
+                                args[0],
+                                getValidEnumValues<DropPosition>().joinToString()
+                            )
+                        )
+                    }
+
+                    else -> {
+                        p.veinMiningData.harvestedDropPosition = value
+                        p.addChatMessage(ChatComponentTranslation("command.bandit.drop_pos.ok", value))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun handleDropTiming(sender: ICommandSender, args: MutableList<String>) {
+        sender.withEntityPlayer { p ->
+            if(args.isEmpty()) {
+                sender.addChatMessage(
+                    ChatComponentTranslation(
+                        "command.bandit.drop_timing",
+                        p.veinMiningData.harvestedDropTiming.toChatComponent(),
+                        getValidEnumValues<DropTiming>().joinToString()
+                    )
+                )
+            } else {
+                when(val value = parseValueToEnum<DropTiming>(args[0])) {
+                    null -> {
+                        p.addChatMessage(
+                            ChatComponentTranslation(
+                                "command.bandit.drop_timing.invalid_argument",
+                                args[0],
+                                getValidEnumValues<DropTiming>().joinToString()
+                            )
+                        )
+                    }
+
+                    else -> {
+                        p.veinMiningData.harvestedDropTiming = value
+                        p.addChatMessage(ChatComponentTranslation("command.bandit.drop_timing.ok", value))
+                    }
+                }
+            }
         }
     }
 }

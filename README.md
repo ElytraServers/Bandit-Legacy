@@ -41,3 +41,30 @@ Currently, we have 4 executors.
 - [All]: Just, all.
 - [Matching Block]: Matches the block, and ignoring the block metadata.
 - [Matching Block and Metadata]: Matches the block and the metadata.
+
+### Drop Options
+
+The options to control the drop position and timing. This option is for each player separately.
+
+See details below.
+
+#### Drop Position
+
+You can change this option by `/bandit drop_pos [dropPosition]`.
+
+This is used to determine which position to drop the harvested items and xp orbs.
+
+- [DROP_AT_START]: Drop at the position where the vein mining starts, the first block you broke.
+- [DROP_TO_PLAYER]: Drop to the player who started the vein mining, which is YOU.
+
+#### Drop Timing
+
+You can change this option by `/bandit drop_timing [dropTiming]`.
+
+This is used to determine which timing to drop the harvested items and xp orbs.
+
+- [IMMEDIATELY]: Drop the harvested items and xp orbs as soon as they are harvested.
+- [EVENTUALLY]: Drop the harvested items and xp orbs when the vein mining is finished.\
+  Notice that the items will be merged into a _BIG_ itemstack with amount of possibly more than 64. This can be very
+  useful when the harvested items are going to be thousands, and rendering dropping items are destroying your PC.
+- [ITEM_IMMEDIATELY_XP_EVENTUALLY]: The combination of the above two.

@@ -20,6 +20,8 @@ bandit.message.precalculated=§3Selected: %s
 command.bandit.usage=/bandit help
 command.bandit.help.0=§6/bandit executor [executorId] - §7list or set the executors
 command.bandit.help.1=§6/bandit filter [blockFilterId] - §7list or set the block filters
+command.bandit.help.2=§6/bandit drop_pos [dropPosition] - §7list or set the position to drop at
+command.bandit.help.3=§6/bandit drop_timing [dropTiming] - §7list or set the timing to drop
 command.bandit.executor.current=You are currently using %s
 command.bandit.executor.list=Possible Executors:
 command.bandit.executor.list.entry=%s %s
@@ -30,6 +32,20 @@ command.bandit.filter.list=Possible Filters:
 command.bandit.filter.list.entry=%s %s
 command.bandit.filter.set.ok=OK!
 command.bandit.filter.set.fail=Failed! Possibly it is an invalid id.
+command.bandit.drop_pos=Currently %s, valid values are %s
+command.bandit.drop_pos.ok=OK, new value is %s!
+command.bandit.drop_pos.invalid_argument=Invalid %s, valid values are %s
+command.bandit.drop_timing=Currently %s, valid values are %s
+command.bandit.drop_timing.ok=OK, new value is %s!
+command.bandit.drop_timing.invalid_argument=Invalid %s, valid values are %s
+
+
+bandit.drop_pos.start=Drop At Start
+bandit.drop_pos.player=Drop To Player
+
+bandit.drop_timing.immediately=All Immediately
+bandit.drop_timing.item_immediately=Items Immediately and Xp Orbs Eventually
+bandit.drop_timing.eventually=All Eventually
 
 keybinding.bandit.category=Bandit Vein Mining
 keybinding.bandit.trigger=Vein Mining Trigger

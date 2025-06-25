@@ -3,8 +3,11 @@ package cn.elytra.mod.bandit.common.player_data
 import cn.elytra.mod.bandit.BanditMod
 import cn.elytra.mod.bandit.common.BanditCoroutines
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext
+import cn.elytra.mod.bandit.common.mining.VeinMiningContext.DropPosition
+import cn.elytra.mod.bandit.common.mining.VeinMiningContext.DropTiming
 import cn.elytra.mod.bandit.common.mining.VeinMiningDataSave
 import cn.elytra.mod.bandit.common.mining.VeinMiningHandler
+import cn.elytra.mod.bandit.common.util.parseValueToEnum
 import cn.elytra.mod.bandit.mining.BlockFilterRegistry
 import cn.elytra.mod.bandit.mining.ExecutorGeneratorRegistry
 import cn.elytra.mod.bandit.mining.executor.BlockPosCacheableExecutorGenerator
@@ -33,7 +36,7 @@ data class VeinMiningPlayerData(
     private val playerMP get() = player as EntityPlayerMP
 
     var currentJob: TypedJob? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
+        if(oldValue != newValue) {
             // cancel ongoing job
             oldValue?.job?.takeIf { it.isActive }?.cancel()
             // make new job unregister itself when completed
@@ -64,6 +67,18 @@ data class VeinMiningPlayerData(
         // if(oldValue != newValue) { }
     }
 
+    var harvestedDropPosition: DropPosition by Delegates.observable(DropPosition.DROP_TO_PLAYER) { _, oldValue, newValue ->
+        if(oldValue != newValue) {
+            save()
+        }
+    }
+
+    var harvestedDropTiming: DropTiming by Delegates.observable(DropTiming.ITEM_IMMEDIATELY_XP_EVENTUALLY) { _, oldValue, newValue ->
+        if(oldValue != newValue) {
+            save()
+        }
+    }
+
     /**
      * The hash of the context when the precalculate take place.
      * It is used to check if there is going to start another "SAME" precalculate.
@@ -87,6 +102,8 @@ data class VeinMiningPlayerData(
     companion object {
         const val TAG_EXECUTOR_GENERATOR = "VeinExecutorGeneratorData"
         const val TAG_BLOCK_FILTER = "VeinBlockFilterData"
+        const val TAG_PREFERRED_DROP_POS = "HarvestedDropPosition"
+        const val TAG_PREFERRED_DROP_TIMING = "HarvestedDropTiming"
 
         internal val InstanceMap = mutableMapOf<String, VeinMiningPlayerData>()
 
@@ -137,6 +154,14 @@ data class VeinMiningPlayerData(
     internal fun readFromNBT(nbtTag: NBTTagCompound) = apply {
         veinMiningExecutorId = nbtTag.getInteger(TAG_EXECUTOR_GENERATOR)
         veinMiningBlockFilterId = nbtTag.getInteger(TAG_BLOCK_FILTER)
+        harvestedDropPosition = parseValueToEnum(
+            nbtTag.getString(TAG_PREFERRED_DROP_POS),
+            DropPosition.DROP_TO_PLAYER
+        )
+        harvestedDropTiming = parseValueToEnum(
+            nbtTag.getString(TAG_PREFERRED_DROP_TIMING),
+            DropTiming.ITEM_IMMEDIATELY_XP_EVENTUALLY
+        )
     }
 
     /**
@@ -145,6 +170,8 @@ data class VeinMiningPlayerData(
     internal fun writeToNBT(nbtTag: NBTTagCompound) = apply {
         nbtTag.setInteger(TAG_EXECUTOR_GENERATOR, veinMiningExecutorId)
         nbtTag.setInteger(TAG_BLOCK_FILTER, veinMiningBlockFilterId)
+        nbtTag.setString(TAG_PREFERRED_DROP_POS, harvestedDropPosition.name)
+        nbtTag.setString(TAG_PREFERRED_DROP_TIMING, harvestedDropTiming.name)
     }
 
     fun getExecutorGenerator(): VeinMiningExecutorGenerator {
@@ -184,12 +211,12 @@ data class VeinMiningPlayerData(
 
         val executionId = VeinMiningHandler.executionCounter.andIncrement
         val context = VeinMiningContext(
-            world,
-            pos,
-            blockAndMeta,
-            playerMP,
-            getBlockFilter(),
-            executionId,
+            world = world,
+            center = pos,
+            blockAndMeta = blockAndMeta,
+            player = playerMP,
+            filter = getBlockFilter(),
+            executionId = executionId,
         )
 
         BanditMod.logger.info("Start caching #${executionId}")
@@ -230,13 +257,15 @@ data class VeinMiningPlayerData(
         val precalculatedVeinBlocksChecked = if(hash == precalculatedHash) precalculatedVeinBlocks else null
 
         val context = VeinMiningContext(
-            world,
-            pos,
-            blockAndMeta,
-            playerMP,
-            getBlockFilter(),
-            executionId,
-            precalculatedVeinBlocksChecked,
+            world = world,
+            center = pos,
+            blockAndMeta = blockAndMeta,
+            player = playerMP,
+            filter = getBlockFilter(),
+            executionId = executionId,
+            precalculatedBlockPosList = precalculatedVeinBlocksChecked,
+            harvestedDropPosition = harvestedDropPosition,
+            harvestedDropTiming = harvestedDropTiming,
         )
         val executor = getExecutorGenerator().generate(context)
 
@@ -255,7 +284,7 @@ data class VeinMiningPlayerData(
                 ChatComponentTranslation(
                     "bandit.message.task-done",
                     context.statBlocksMined.get(),
-                    context.statItemsCollected.get()
+                    context.statItemDropped.values.sum()
                 )
             )
             // play sound effects
