@@ -13,6 +13,7 @@ open class CommonProxy {
     open fun preInit(e: FMLPreInitializationEvent) {
         BanditMod.logger.info("Initializing network")
         BanditNetwork.register(e)
+        BanditConfig.init(e)
     }
 
     open fun serverStarting(e: FMLServerStartingEvent) {
