@@ -5,6 +5,7 @@ import cpw.mods.fml.common.SidedProxy
 import cpw.mods.fml.common.event.FMLPreInitializationEvent
 import cpw.mods.fml.common.event.FMLServerStartingEvent
 import cpw.mods.fml.common.event.FMLServerStoppingEvent
+import cpw.mods.fml.common.eventhandler.EventBus
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -28,6 +29,8 @@ object BanditMod {
         clientSide = "cn.elytra.mod.bandit.ClientProxy",
     )
     lateinit var proxy: CommonProxy
+
+    val bus = EventBus()
 
     @Mod.EventHandler
     fun preInit(e: FMLPreInitializationEvent) {

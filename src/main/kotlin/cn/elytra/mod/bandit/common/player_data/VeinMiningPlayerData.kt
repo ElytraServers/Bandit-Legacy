@@ -202,6 +202,7 @@ data class VeinMiningPlayerData(
         val block = world.getBlock(mop.blockX, mop.blockY, mop.blockZ)
         val blockMeta = world.getBlockMetadata(mop.blockX, mop.blockY, mop.blockZ)
         val blockAndMeta = block to blockMeta
+        val blockTileEntity = world.getTileEntity(mop.blockX, mop.blockY, mop.blockZ)
 
         val hash = precalculatedHash(pos, block, blockMeta)
         if(precalculatedVeinBlocks != null) {
@@ -214,6 +215,7 @@ data class VeinMiningPlayerData(
             world = world,
             center = pos,
             blockAndMeta = blockAndMeta,
+            blockTileEntity = blockTileEntity,
             player = playerMP,
             filter = getBlockFilter(),
             executionId = executionId,
@@ -249,6 +251,7 @@ data class VeinMiningPlayerData(
         val block = world.getBlock(x, y, z)
         val blockMeta = world.getBlockMetadata(x, y, z)
         val blockAndMeta = block to blockMeta
+        val blockTileEntity = world.getTileEntity(x, y, z)
         val executionId = VeinMiningHandler.executionCounter.andIncrement
 
         // check hash, in case of MOP traced to a wrong block.
@@ -260,6 +263,7 @@ data class VeinMiningPlayerData(
             world = world,
             center = pos,
             blockAndMeta = blockAndMeta,
+            blockTileEntity = blockTileEntity,
             player = playerMP,
             filter = getBlockFilter(),
             executionId = executionId,

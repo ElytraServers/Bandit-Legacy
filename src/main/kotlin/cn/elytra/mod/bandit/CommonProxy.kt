@@ -2,7 +2,9 @@ package cn.elytra.mod.bandit
 
 import cn.elytra.mod.bandit.common.BanditCoroutines
 import cn.elytra.mod.bandit.common.command.BanditCommand
+import cn.elytra.mod.bandit.compat.GT5UCompat
 import cn.elytra.mod.bandit.network.BanditNetwork
+import cpw.mods.fml.common.Loader
 import cpw.mods.fml.common.event.FMLPreInitializationEvent
 import cpw.mods.fml.common.event.FMLServerStartingEvent
 import cpw.mods.fml.common.event.FMLServerStoppingEvent
@@ -14,6 +16,11 @@ open class CommonProxy {
         BanditMod.logger.info("Initializing network")
         BanditNetwork.register(e)
         BanditConfig.init(e)
+
+        if(Loader.isModLoaded("gregtech")) {
+            GT5UCompat.init()
+            BanditMod.logger.info("GT5UCompat loaded")
+        }
     }
 
     open fun serverStarting(e: FMLServerStartingEvent) {

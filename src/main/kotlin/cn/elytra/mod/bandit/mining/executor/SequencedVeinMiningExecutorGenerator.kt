@@ -1,9 +1,11 @@
 package cn.elytra.mod.bandit.mining.executor
 
+import cn.elytra.mod.bandit.BanditMod
 import cn.elytra.mod.bandit.common.BanditCoroutines
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext.DropPosition
 import cn.elytra.mod.bandit.mining.HarvestCollector
+import cn.elytra.mod.bandit.mining.event.VeinMiningEvent
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -31,7 +33,9 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
      * Override this function for executor-specific filter.
      */
     protected open fun isBlockMatchingVein(context: VeinMiningContext, pos: BlockPos): Boolean {
-        return context.filter.isBlockMatching(context, pos)
+        val value = context.filter.isBlockMatching(context, pos)
+        val event = VeinMiningEvent.BlockMatching(context, pos, value).also { BanditMod.bus.post(it) }
+        return event.isBlockMatching
     }
 
     /**

@@ -7,6 +7,7 @@ import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import net.minecraft.block.Block
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.item.ItemStack
+import net.minecraft.tileentity.TileEntity
 import net.minecraft.world.World
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
@@ -15,6 +16,7 @@ data class VeinMiningContext(
     val world: World,
     val center: BlockPos,
     val blockAndMeta: Pair<Block, Int>,
+    val blockTileEntity: TileEntity?,
     val player: EntityPlayerMP,
     val filter: VeinMiningBlockFilter,
     val executionId: Int = -1,
