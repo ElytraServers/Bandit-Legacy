@@ -43,9 +43,9 @@ command.bandit.drop_timing.invalid_argument=Invalid %s, 有效的值是 %s
 bandit.drop_pos.start=掉落在起点
 bandit.drop_pos.player=掉落在玩家处
 
-bandit.drop_timing.immediately=立刻完成
-bandit.drop_timing.item_immediately=物品立刻完成，经验球延时完成
-bandit.drop_timing.eventually=延时完成
+bandit.drop_timing.immediately=开采时掉落
+bandit.drop_timing.item_immediately=物品开采时掉落，经验球在连锁完成合并后掉落
+bandit.drop_timing.eventually=在连锁完成合并后掉落
 
 keybinding.bandit.category=Bandit Vein Mining
 keybinding.bandit.trigger=连锁挖掘触发器
