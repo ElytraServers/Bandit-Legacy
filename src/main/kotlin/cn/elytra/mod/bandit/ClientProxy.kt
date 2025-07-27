@@ -14,6 +14,7 @@ class ClientProxy : CommonProxy() {
         BanditMod.logger.info("Initializing keybindings")
         ClientRegistry.registerKeyBinding(VeinMiningHandlerClient.statusKey)
 
+        VeinMiningConfigClient.reload()
         VeinMiningConfigClient.save() // load and save config
     }
 
