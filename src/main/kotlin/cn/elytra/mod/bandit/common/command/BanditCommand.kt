@@ -16,6 +16,8 @@ object BanditCommand : CommandBase() {
     override fun getCommandName(): String? = "bandit"
     override fun getCommandUsage(sender: ICommandSender?): String? = "command.bandit.usage"
 
+    override fun getRequiredPermissionLevel(): Int = 2
+
     override fun processCommand(
         sender: ICommandSender,
         argsArray: Array<String>,
