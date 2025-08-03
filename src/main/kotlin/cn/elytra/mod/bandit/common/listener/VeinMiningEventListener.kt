@@ -3,7 +3,6 @@ package cn.elytra.mod.bandit.common.listener
 import cn.elytra.mod.bandit.common.player_data.veinMiningData
 import cn.elytra.mod.bandit.mining.HarvestCollector
 import cn.elytra.mod.bandit.network.BanditNetwork
-import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber
 import cpw.mods.fml.common.eventhandler.SubscribeEvent
 import cpw.mods.fml.common.gameevent.PlayerEvent
 import cpw.mods.fml.common.gameevent.TickEvent
@@ -16,12 +15,10 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent
 import net.minecraftforge.event.world.BlockEvent
 
 @Suppress("unused")
-@EventBusSubscriber
 class VeinMiningEventListener {
 
     companion object {
 
-        @JvmStatic
         @SubscribeEvent
         fun onBlockBreaking(e: BlockEvent.BreakEvent) {
             val p = e.player
@@ -36,7 +33,6 @@ class VeinMiningEventListener {
             }
         }
 
-        @JvmStatic
         @SubscribeEvent
         fun onEntitySpawn(e: EntityJoinWorldEvent) {
             if(!HarvestCollector.shouldCollect) return
@@ -59,7 +55,6 @@ class VeinMiningEventListener {
             }
         }
 
-        @JvmStatic
         @SubscribeEvent
         fun onPlayerTick(e: TickEvent.PlayerTickEvent) {
             val p = e.player
@@ -74,7 +69,6 @@ class VeinMiningEventListener {
             }
         }
 
-        @JvmStatic
         @SubscribeEvent
         fun onPlayerJoin(e: PlayerEvent.PlayerLoggedInEvent) {
             val p = e.player
@@ -96,7 +90,6 @@ class VeinMiningEventListener {
             }
         }
 
-        @JvmStatic
         @SubscribeEvent
         fun onPlayerLeave(e: PlayerEvent.PlayerLoggedOutEvent) {
             e.player.veinMiningData.stopAndClear()

@@ -32,6 +32,7 @@ unimined.minecraft {
     version = property("mcVersion").toString()
 
     mappings {
+        searge()
         mcp("stable", property("mcpMappingVersion").toString())
     }
 

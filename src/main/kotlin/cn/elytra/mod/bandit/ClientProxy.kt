@@ -16,6 +16,8 @@ class ClientProxy : CommonProxy() {
 
         VeinMiningConfigClient.reload()
         VeinMiningConfigClient.save() // load and save config
+
+        subscribeCommonBuses(VeinMiningHandlerClient)
     }
 
     override fun serverStopping(event: FMLServerStoppingEvent) {

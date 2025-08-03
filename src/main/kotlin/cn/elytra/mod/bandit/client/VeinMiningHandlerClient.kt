@@ -8,7 +8,6 @@ import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.veinMiningBlockFilter
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.veinMiningExecutorId
 import cn.elytra.mod.bandit.network.BanditNetwork
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
-import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber
 import cpw.mods.fml.client.event.ConfigChangedEvent
 import cpw.mods.fml.common.eventhandler.SubscribeEvent
 import cpw.mods.fml.common.gameevent.TickEvent
@@ -34,7 +33,6 @@ import org.lwjgl.input.Keyboard
  * @see cn.elytra.mod.bandit.common.mining.VeinMiningHandler
  */
 @Suppress("unused")
-@EventBusSubscriber
 object VeinMiningHandlerClient {
 
     var veinMiningExecutorId = 0
@@ -58,7 +56,6 @@ object VeinMiningHandlerClient {
         MixinBridger.onMouseScrollCancelable += this::onMouseInput
     }
 
-    @JvmStatic
     @SubscribeEvent
     fun onClientTick(e: TickEvent.ClientTickEvent) {
         if(e.phase != TickEvent.Phase.START) return
@@ -84,7 +81,6 @@ object VeinMiningHandlerClient {
         return false
     }
 
-    @JvmStatic
     @SubscribeEvent
     fun onRenderHUD(e: TickEvent.RenderTickEvent) {
         if(e.phase != TickEvent.Phase.END) return
@@ -93,7 +89,6 @@ object VeinMiningHandlerClient {
         }
     }
 
-    @JvmStatic
     @SubscribeEvent
     fun onRenderSelectedBlock(e: RenderWorldLastEvent) {
         val selectedBlockPosList = selectedBlockPosList
@@ -104,7 +99,6 @@ object VeinMiningHandlerClient {
         }
     }
 
-    @JvmStatic
     @SubscribeEvent
     fun onConfigReloaded(e: ConfigChangedEvent.PostConfigChangedEvent) {
         if(e.modID == BanditMod.MOD_ID) {
