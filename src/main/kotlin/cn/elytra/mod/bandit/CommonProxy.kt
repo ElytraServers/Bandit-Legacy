@@ -17,10 +17,12 @@ open class CommonProxy {
         BanditNetwork.register(e)
         BanditConfig.init(e)
 
+        //? if 1.7.10 {
         if(Loader.isModLoaded("gregtech")) {
             GT5UCompat.init()
             BanditMod.logger.info("GT5UCompat loaded")
         }
+        //? }
     }
 
     open fun serverStarting(e: FMLServerStartingEvent) {

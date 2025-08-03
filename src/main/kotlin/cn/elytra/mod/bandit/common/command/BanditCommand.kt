@@ -7,6 +7,7 @@ import cn.elytra.mod.bandit.common.util.parseValueToEnum
 import cn.elytra.mod.bandit.mining.BlockFilterRegistry
 import cn.elytra.mod.bandit.mining.ExecutorGeneratorRegistry
 import net.minecraft.command.CommandBase
+import net.minecraft.command.ICommand
 import net.minecraft.command.ICommandSender
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.util.ChatComponentText
@@ -188,5 +189,11 @@ object BanditCommand : CommandBase() {
                 }
             }
         }
+    }
+
+    @Suppress("RedundantOverride")
+    override fun compareTo(other: Any?): Int {
+        // I don't know why this is needed. Possibly some weird glitch from Unimined.
+        return super.compareTo(other)
     }
 }

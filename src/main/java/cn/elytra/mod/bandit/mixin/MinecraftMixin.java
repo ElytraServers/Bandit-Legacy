@@ -13,7 +13,7 @@ public class MinecraftMixin {
 
     @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/InventoryPlayer;changeCurrentItem(I)V"), cancellable = true)
     private void bandit$hookMouseScroll(CallbackInfo ci, @Local(ordinal = 1) int i) {
-        var shouldCancel = MixinBridger.fireMouseScrollCancelable(i);
+        boolean shouldCancel = MixinBridger.fireMouseScrollCancelable(i);
         if(shouldCancel) {
             ci.cancel();
         }

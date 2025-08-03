@@ -9,6 +9,10 @@ pluginManagement {
                 includeGroupByRegex("com\\.gtnewhorizons\\..+")
             }
         }
+        maven {
+            name = "WagYourMaven"
+            url = uri("https://maven.wagyourtail.xyz/releases")
+        }
         gradlePluginPortal()
         mavenCentral()
         mavenLocal()
@@ -16,5 +20,12 @@ pluginManagement {
 }
 
 plugins {
-    id("com.gtnewhorizons.gtnhsettingsconvention") version ("1.0.33")
+    id("dev.kikugie.stonecutter") version "0.7.5"
+}
+
+stonecutter {
+    create(rootProject) {
+        versions("1.7.10", "1.12.2")
+        vcsVersion = "1.7.10"
+    }
 }
