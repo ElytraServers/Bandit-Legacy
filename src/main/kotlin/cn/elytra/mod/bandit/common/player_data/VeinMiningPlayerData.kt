@@ -23,6 +23,7 @@ import net.minecraft.block.Block
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.nbt.NBTTagCompound
+import net.minecraft.server.MinecraftServer
 import net.minecraft.util.ChatComponentTranslation
 import net.minecraft.util.MovingObjectPosition
 import java.util.*
@@ -30,10 +31,11 @@ import kotlin.properties.Delegates
 
 data class VeinMiningPlayerData(
     val uuid: String,
-    var player: EntityPlayer,
 ) {
 
-    private val playerMP get() = player as EntityPlayerMP
+    private fun getPlayer(): EntityPlayer {
+        return checkNotNull(getPlayerFromUUID(uuid)) { "Failed to find the player with UUID: $uuid" }
+    }
 
     var currentJob: TypedJob? by Delegates.observable(null) { _, oldValue, newValue ->
         if(oldValue != newValue) {
@@ -92,9 +94,9 @@ data class VeinMiningPlayerData(
         if(oldValue != newValue) {
             if(newValue == null) {
                 precalculatedHash = -1
-                BanditNetwork.syncBlockCacheToClient(playerMP, null)
+                BanditNetwork.syncBlockCacheToClient(getPlayer().asMP, null)
             } else {
-                BanditNetwork.syncBlockCacheToClient(playerMP, newValue)
+                BanditNetwork.syncBlockCacheToClient(getPlayer().asMP, newValue)
             }
         }
     }
@@ -109,20 +111,7 @@ data class VeinMiningPlayerData(
 
         fun getOrCreate(player: EntityPlayer): VeinMiningPlayerData {
             val uuidStr = player.uniqueID.toString()
-
-            val data = InstanceMap[uuidStr]
-            return if(data != null) {
-                // check if the player is same
-                if(data.player != player) {
-                    data.player = player
-                }
-                data
-            } else {
-                // create a new data
-                val data = VeinMiningPlayerData(uuidStr, player)
-                InstanceMap.put(uuidStr, data)
-                data
-            }
+            return InstanceMap.computeIfAbsent(uuidStr) { VeinMiningPlayerData(uuidStr) }
         }
 
         /**
@@ -130,6 +119,13 @@ data class VeinMiningPlayerData(
          */
         internal fun precalculatedHash(bp: BlockPos, block: Block, blockMeta: Int): Int {
             return Objects.hash(bp, block, blockMeta)
+        }
+
+        fun getPlayerFromUUID(uuid: String): EntityPlayer? {
+            return MinecraftServer.getServer()
+                .configurationManager
+                .playerEntityList
+                .firstOrNull { it.uniqueID.toString() == uuid }
         }
     }
 
@@ -193,6 +189,7 @@ data class VeinMiningPlayerData(
         val execGenerator = getExecutorGenerator()
         if(execGenerator !is BlockPosCacheableExecutorGenerator) return
 
+        val player = getPlayer()
         val world = player.worldObj
         val mop = RayTracer.reTrace(world, player)
         // invalid raytrace hit type
@@ -216,7 +213,7 @@ data class VeinMiningPlayerData(
             center = pos,
             blockAndMeta = blockAndMeta,
             blockTileEntity = blockTileEntity,
-            player = playerMP,
+            playerSupplier = { getPlayer().asMP },
             filter = getBlockFilter(),
             executionId = executionId,
         )
@@ -246,6 +243,7 @@ data class VeinMiningPlayerData(
             }
         }
 
+        val player = getPlayer()
         val world = player.worldObj
         val pos = BlockPos(x, y, z)
         val block = world.getBlock(x, y, z)
@@ -264,7 +262,7 @@ data class VeinMiningPlayerData(
             center = pos,
             blockAndMeta = blockAndMeta,
             blockTileEntity = blockTileEntity,
-            player = playerMP,
+            playerSupplier = { getPlayer().asMP },
             filter = getBlockFilter(),
             executionId = executionId,
             precalculatedBlockPosList = precalculatedVeinBlocksChecked,
@@ -314,3 +312,5 @@ data class VeinMiningPlayerData(
 }
 
 internal val EntityPlayer.veinMiningData: VeinMiningPlayerData get() = VeinMiningPlayerData.getOrCreate(this)
+
+internal val EntityPlayer.asMP: EntityPlayerMP get() = this as EntityPlayerMP

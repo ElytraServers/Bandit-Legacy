@@ -45,7 +45,7 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
      */
     protected open fun doBlockHarvestOn(context: VeinMiningContext, pos: BlockPos) {
         val (drops, xpValue) = HarvestCollector.withHarvestCollectorScope {
-            context.player.theItemInWorldManager.tryHarvestBlock(pos.x, pos.y, pos.z)
+            context.getPlayer().theItemInWorldManager.tryHarvestBlock(pos.x, pos.y, pos.z)
         }
 
         when(context.harvestedDropTiming) {
@@ -107,11 +107,10 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
                 context.center.z.toDouble()
             )
 
-            DropPosition.DROP_TO_PLAYER -> Vec3.createVectorHelper(
-                context.player.posX,
-                context.player.posY,
-                context.player.posZ
-            )
+            DropPosition.DROP_TO_PLAYER -> {
+                val player = context.getPlayer()
+                Vec3.createVectorHelper(player.posX, player.posY, player.posZ)
+            }
         }
     }
 

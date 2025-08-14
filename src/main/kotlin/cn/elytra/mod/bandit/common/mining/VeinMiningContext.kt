@@ -17,7 +17,9 @@ data class VeinMiningContext(
     val center: BlockPos,
     val blockAndMeta: Pair<Block, Int>,
     val blockTileEntity: TileEntity?,
-    val player: EntityPlayerMP,
+    // why supplier? the player can be changed during vein-mining, because of death, dimension changing, etc.
+    // this fixes the bug that when player dies, everything goes weird.
+    val playerSupplier: () -> EntityPlayerMP,
     val filter: VeinMiningBlockFilter,
     val executionId: Int = -1,
     val precalculatedBlockPosList: List<BlockPos>? = null,
@@ -63,5 +65,7 @@ data class VeinMiningContext(
             override fun getUnlocalizedName(): String = "bandit.drop_timing.eventually"
         },
     }
+
+    fun getPlayer(): EntityPlayerMP = playerSupplier()
 
 }
