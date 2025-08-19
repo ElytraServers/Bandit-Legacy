@@ -11,6 +11,7 @@ bandit.block-filter.match-block-and-meta=Matching Block and Metadata
 bandit.message.task-starting=§aStarting Vein Mining task
 bandit.message.task-halt-hint=§aYou can type §6/bandit stop §ato halt a ongoing task
 bandit.message.task-done=§aVein Mining done! §7Harvested %s §7blocks, and dropped %s §7items.
+bandit.message.task-stop.key-release=§aVein Mining stopped because the key was released.
 
 bandit.message.sync-from-server=§7Updated your settings to %s §7and %s
 
@@ -38,6 +39,9 @@ command.bandit.drop_pos.invalid_argument=Invalid %s, valid values are %s
 command.bandit.drop_timing=Currently %s, valid values are %s
 command.bandit.drop_timing.ok=OK, new value is %s!
 command.bandit.drop_timing.invalid_argument=Invalid %s, valid values are %s
+command.bandit.stop_on_release=Currently %s
+command.bandit.stop_on_release.ok=OK, new value is %s!
+command.bandit.stop_on_release.invalid_argument=Invalid boolean %s
 
 
 bandit.drop_pos.start=Drop At Start

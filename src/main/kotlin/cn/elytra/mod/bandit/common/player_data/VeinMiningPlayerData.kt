@@ -10,6 +10,8 @@ import cn.elytra.mod.bandit.common.mining.VeinMiningHandler
 import cn.elytra.mod.bandit.common.util.parseValueToEnum
 import cn.elytra.mod.bandit.mining.BlockFilterRegistry
 import cn.elytra.mod.bandit.mining.ExecutorGeneratorRegistry
+import cn.elytra.mod.bandit.mining.exception.FriendlyCancellationException
+import cn.elytra.mod.bandit.mining.exception.KeyReleaseCancellation
 import cn.elytra.mod.bandit.mining.executor.BlockPosCacheableExecutorGenerator
 import cn.elytra.mod.bandit.mining.executor.VeinMiningExecutorGenerator
 import cn.elytra.mod.bandit.mining.filter.VeinMiningBlockFilter
@@ -27,6 +29,7 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.util.ChatComponentTranslation
 import net.minecraft.util.MovingObjectPosition
 import java.util.*
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.properties.Delegates
 
 data class VeinMiningPlayerData(
@@ -66,7 +69,11 @@ data class VeinMiningPlayerData(
     }
 
     var veinMiningKeyPressed: Boolean by Delegates.observable(false) { _, oldValue, newValue ->
-        // if(oldValue != newValue) { }
+        if(oldValue != newValue) {
+            if(!newValue) { // key released
+                if(stopVeinMiningOnKeyRelease) cancelJob(KeyReleaseCancellation())
+            }
+        }
     }
 
     var harvestedDropPosition: DropPosition by Delegates.observable(DropPosition.DROP_TO_PLAYER) { _, oldValue, newValue ->
@@ -76,6 +83,12 @@ data class VeinMiningPlayerData(
     }
 
     var harvestedDropTiming: DropTiming by Delegates.observable(DropTiming.ITEM_IMMEDIATELY_XP_EVENTUALLY) { _, oldValue, newValue ->
+        if(oldValue != newValue) {
+            save()
+        }
+    }
+
+    var stopVeinMiningOnKeyRelease: Boolean by Delegates.observable(false) { _, oldValue, newValue ->
         if(oldValue != newValue) {
             save()
         }
@@ -106,6 +119,7 @@ data class VeinMiningPlayerData(
         const val TAG_BLOCK_FILTER = "VeinBlockFilterData"
         const val TAG_PREFERRED_DROP_POS = "HarvestedDropPosition"
         const val TAG_PREFERRED_DROP_TIMING = "HarvestedDropTiming"
+        const val TAG_STOP_VEIN_MINING_ON_KEY_RELEASE = "StopVeinMiningOnKeyRelease"
 
         internal val InstanceMap = mutableMapOf<String, VeinMiningPlayerData>()
 
@@ -158,6 +172,7 @@ data class VeinMiningPlayerData(
             nbtTag.getString(TAG_PREFERRED_DROP_TIMING),
             DropTiming.ITEM_IMMEDIATELY_XP_EVENTUALLY
         )
+        stopVeinMiningOnKeyRelease = nbtTag.getBoolean(TAG_STOP_VEIN_MINING_ON_KEY_RELEASE)
     }
 
     /**
@@ -168,6 +183,7 @@ data class VeinMiningPlayerData(
         nbtTag.setInteger(TAG_BLOCK_FILTER, veinMiningBlockFilterId)
         nbtTag.setString(TAG_PREFERRED_DROP_POS, harvestedDropPosition.name)
         nbtTag.setString(TAG_PREFERRED_DROP_TIMING, harvestedDropTiming.name)
+        nbtTag.setBoolean(TAG_STOP_VEIN_MINING_ON_KEY_RELEASE, stopVeinMiningOnKeyRelease)
     }
 
     fun getExecutorGenerator(): VeinMiningExecutorGenerator {
@@ -225,7 +241,15 @@ data class VeinMiningPlayerData(
         }
         job.invokeOnCompletion {
             BanditMod.logger.info("Cached #${executionId}")
-            if(it != null) BanditMod.logger.warn("Caused by an Throwable", it)
+            if(it != null) {
+                when(it) {
+                    is KeyReleaseCancellation -> {
+                        /* ignored */
+                    }
+
+                    else -> BanditMod.logger.warn("Job was cancelled because of an throwable", it)
+                }
+            }
         }
         currentJob = TypedJob(job, TypedJob.JobType.VeinMiningPrecalculating)
 
@@ -281,7 +305,15 @@ data class VeinMiningPlayerData(
         }
         job.invokeOnCompletion {
             BanditMod.logger.info("VeinMining #${executionId} has ended")
-            if(it != null) BanditMod.logger.warn("Caused by an Throwable", it)
+            if(it != null) {
+                when(it) {
+                    is KeyReleaseCancellation -> {
+                        getPlayer().addChatMessage(ChatComponentTranslation("bandit.message.task-stop.key-release"))
+                    }
+
+                    else -> BanditMod.logger.warn("Job was cancelled because of an throwable", it)
+                }
+            }
             player.addChatMessage(
                 ChatComponentTranslation(
                     "bandit.message.task-done",
@@ -301,6 +333,17 @@ data class VeinMiningPlayerData(
 
     fun stopJob(reason: String = "no reason") {
         currentJob?.job?.cancel("stopping for $reason")
+    }
+
+    /**
+     * Cancel the ongoing job for the player.
+     *
+     * It's safe to invoke this even there's no ongoing job for the player.
+     *
+     * Exceptions except [FriendlyCancellationException] are handled as errors.
+     */
+    internal fun cancelJob(cause: CancellationException?) {
+        currentJob?.job?.cancel(cause)
     }
 
     fun stopAndClear() {

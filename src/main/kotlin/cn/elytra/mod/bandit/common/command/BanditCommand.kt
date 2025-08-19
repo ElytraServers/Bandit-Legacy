@@ -13,8 +13,8 @@ import net.minecraft.util.ChatComponentText
 import net.minecraft.util.ChatComponentTranslation
 
 object BanditCommand : CommandBase() {
-    override fun getCommandName(): String? = "bandit"
-    override fun getCommandUsage(sender: ICommandSender?): String? = "command.bandit.usage"
+    override fun getCommandName(): String = "bandit"
+    override fun getCommandUsage(sender: ICommandSender?): String = "command.bandit.usage"
 
     override fun getRequiredPermissionLevel(): Int = 2
 
@@ -30,6 +30,7 @@ object BanditCommand : CommandBase() {
             "stop", "halt" -> handleHaltRequest(sender)
             "drop_pos" -> handleDropPos(sender, args)
             "drop_timing" -> handleDropTiming(sender, args)
+            "stop_on_release" -> handleStopOnRelease(sender, args)
             else -> handleHelp(sender)
         }
     }
@@ -184,6 +185,36 @@ object BanditCommand : CommandBase() {
                     else -> {
                         p.veinMiningData.harvestedDropTiming = value
                         p.addChatMessage(ChatComponentTranslation("command.bandit.drop_timing.ok", value))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun handleStopOnRelease(sender: ICommandSender, args: MutableList<String>) {
+        sender.withEntityPlayer { p ->
+            if(args.isEmpty()) {
+                p.addChatMessage(
+                    ChatComponentTranslation(
+                        "command.bandit.stop_on_release",
+                        p.veinMiningData.stopVeinMiningOnKeyRelease
+                    )
+                )
+            } else {
+                when(val value = args[0].toBooleanStrictOrNull()) {
+                    null -> {
+                        p.addChatMessage(
+                            ChatComponentTranslation(
+                                "command.bandit.stop_on_release.invalid_argument",
+                                args[0],
+                                "[true, false]"
+                            )
+                        )
+                    }
+
+                    else -> {
+                        p.veinMiningData.stopVeinMiningOnKeyRelease = value
+                        p.addChatMessage(ChatComponentTranslation("command.bandit.stop_on_release.ok", value))
                     }
                 }
             }
