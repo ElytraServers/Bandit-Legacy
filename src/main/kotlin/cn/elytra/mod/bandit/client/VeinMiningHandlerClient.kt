@@ -63,19 +63,19 @@ object VeinMiningHandlerClient {
     @JvmStatic
     @SubscribeEvent
     fun onKeyInput(e: InputEvent.KeyInputEvent) {
-        if (Minecraft.getMinecraft().thePlayer == null) return
+        if(Minecraft.getMinecraft().thePlayer == null) return
 
-        val keyPressedNow = if (statusKey.keyCode >= 0) {
+        val keyPressedNow = if(statusKey.keyCode >= 0) {
             Keyboard.isKeyDown(statusKey.keyCode)
         } else {
             val button = Mouse.getEventButton()
-            if (button == -1) {
+            if(button == -1) {
                 keyPressed
             } else {
                 statusKey.keyCode + 100 == button && Mouse.getEventButtonState()
             }
         }
-        if (keyPressedNow != keyPressed) {
+        if(keyPressedNow != keyPressed) {
             BanditNetwork.syncStatusToServer(keyPressedNow)
             keyPressed = keyPressedNow
         }
@@ -83,10 +83,10 @@ object VeinMiningHandlerClient {
 
     fun onMouseInput(d: Int): Boolean {
         VeinMiningHUD.withActiveMenu {
-            if (d < 0) {
+            if(d < 0) {
                 this.move(1)
                 return true
-            } else if (d > 0) {
+            } else if(d > 0) {
                 this.move(-1)
                 return true
             }
@@ -97,8 +97,8 @@ object VeinMiningHandlerClient {
     @JvmStatic
     @SubscribeEvent
     fun onRenderHUD(e: TickEvent.RenderTickEvent) {
-        if (e.phase != TickEvent.Phase.END) return
-        if (keyPressed) {
+        if(e.phase != TickEvent.Phase.END) return
+        if(keyPressed) {
             VeinMiningHUD.render()
         }
     }
@@ -107,8 +107,8 @@ object VeinMiningHandlerClient {
     @SubscribeEvent
     fun onRenderSelectedBlock(e: RenderWorldLastEvent) {
         val selectedBlockPosList = selectedBlockPosList
-        if (keyPressed && selectedBlockPosList != null && selectedBlockPosList.isNotEmpty()) {
-            if (selectedBlockPosList.size <= maxSelectionRenderCount) {
+        if(keyPressed && selectedBlockPosList != null && selectedBlockPosList.isNotEmpty()) {
+            if(selectedBlockPosList.size <= maxSelectionRenderCount) {
                 VeinMiningSelectionRenderer.render(e, selectedBlockPosList)
             }
         }
@@ -117,7 +117,7 @@ object VeinMiningHandlerClient {
     @JvmStatic
     @SubscribeEvent
     fun onConfigReloaded(e: ConfigChangedEvent.PostConfigChangedEvent) {
-        if (e.modID == BanditMod.MOD_ID) {
+        if(e.modID == BanditMod.MOD_ID) {
             BanditMod.logger.info("Refreshing configuration")
             VeinMiningConfigClient.reload()
             VeinMiningConfigClient.save()
