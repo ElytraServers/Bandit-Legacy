@@ -11,11 +11,13 @@ import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber
 import cpw.mods.fml.client.event.ConfigChangedEvent
 import cpw.mods.fml.common.eventhandler.SubscribeEvent
+import cpw.mods.fml.common.gameevent.InputEvent
 import cpw.mods.fml.common.gameevent.TickEvent
 import net.minecraft.client.Minecraft
 import net.minecraft.client.settings.KeyBinding
 import net.minecraftforge.client.event.RenderWorldLastEvent
 import org.lwjgl.input.Keyboard
+import org.lwjgl.input.Mouse
 
 /**
  * The object that handles all the things about Vein Mining on the client side.
@@ -60,11 +62,19 @@ object VeinMiningHandlerClient {
 
     @JvmStatic
     @SubscribeEvent
-    fun onClientTick(e: TickEvent.ClientTickEvent) {
-        if(e.phase != TickEvent.Phase.START) return
+    fun onKeyInput(e: InputEvent.KeyInputEvent) {
         if(Minecraft.getMinecraft().thePlayer == null) return
 
-        val keyPressedNow = Keyboard.isKeyDown(statusKey.keyCode)
+        val keyPressedNow = if(statusKey.keyCode >= 0) {
+            Keyboard.isKeyDown(statusKey.keyCode)
+        } else {
+            val button = Mouse.getEventButton()
+            if(button == -1) {
+                keyPressed
+            } else {
+                statusKey.keyCode + 100 == button && Mouse.getEventButtonState()
+            }
+        }
         if(keyPressedNow != keyPressed) {
             BanditNetwork.syncStatusToServer(keyPressedNow)
             keyPressed = keyPressedNow
@@ -76,7 +86,7 @@ object VeinMiningHandlerClient {
             if(d < 0) {
                 this.move(1)
                 return true
-            } else if (d > 0) {
+            } else if(d > 0) {
                 this.move(-1)
                 return true
             }
