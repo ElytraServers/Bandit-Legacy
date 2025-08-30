@@ -62,7 +62,7 @@ object VeinMiningHandlerClient {
 
     @JvmStatic
     @SubscribeEvent
-    fun onClientTick(e: InputEvent.KeyInputEvent) {
+    fun onKeyInput(e: InputEvent.KeyInputEvent) {
         if (Minecraft.getMinecraft().thePlayer == null) return
 
         val keyPressedNow = if (statusKey.keyCode >= 0) {
