@@ -11,6 +11,7 @@ bandit.block-filter.match-block-and-meta=匹配方块和Meta
 bandit.message.task-starting=§a开始连锁挖掘任务
 bandit.message.task-halt-hint=§a你可以输入 §6/bandit stop §a来停止正在执行的任务
 bandit.message.task-done=§a连锁挖掘完成! §7连锁了 %s §7个方块, 获得 %s §7个掉落物.
+bandit.message.task-stop.key-release=§a按键已释放，连锁挖掘已停止.
 
 bandit.message.sync-from-server=§7更新设置至 %s §7和 %s
 
@@ -37,7 +38,10 @@ command.bandit.drop_pos.ok=OK, 新的值是 %s!
 command.bandit.drop_pos.invalid_argument=无效 %s, 有效的值是 %s
 command.bandit.drop_timing=当前 %s, 有效的值是 %s
 command.bandit.drop_timing.ok=OK, 新的值是 %s!
-command.bandit.drop_timing.invalid_argument=Invalid %s, 有效的值是 %s
+command.bandit.drop_timing.invalid_argument=无效 %s, 有效的值是 %s
+command.bandit.stop_on_release=当前 %s
+command.bandit.stop_on_release.ok=OK, 新的值是 %s!
+command.bandit.stop_on_release.invalid_argument=无效布尔值 %s
 
 
 bandit.drop_pos.start=掉落在起点
