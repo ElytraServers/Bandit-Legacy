@@ -2,6 +2,7 @@ package cn.elytra.mod.bandit.mining.executor
 
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
+import com.gtnewhorizon.gtnhlib.blockpos.IBlockPos
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import net.minecraftforge.common.util.ForgeDirection
@@ -75,7 +76,11 @@ class ManhattanExecutorGenerator(
                 }
             } else {
                 yieldAll(ForgeDirection.entries.map {
-                    p.offset(it) as BlockPos
+                    // FIX: GTNHLib changed the return type of BlockPos from "IBlockPos" to "BlockPos"
+                    // in a later version, and this is ABI-incompatible.
+                    // Thus, we cast p to IBlockPos, then cast the result back to BlockPos to fix this bug.
+                    // TODO: Remove this weird cast line when we abandon GTNH 2.7.X.
+                    (p as IBlockPos).offset(it) as BlockPos
                 })
             }
         }

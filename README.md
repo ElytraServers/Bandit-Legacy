@@ -6,6 +6,22 @@ Get your ores like a Bandit.
 
 Yet Another Ore Vein Mining Mod, inspired by [Qz-Miner](https://github.com/QuanhuZeYu/Qz-Miner).
 
+## Install
+
+Requires **Forgelin**, **CodeChickenCore** and **GTNHLib**.
+
+### GTNH 2.8.X
+
+_Everything should be good._
+
+### GTNH 2.7.X
+
+- Update [Forgelin](https://github.com/GTNewHorizons/Forgelin/releases) to at least `2.0.0-GTNH`.
+
+### Older GTNH Versions
+
+Not supported!
+
 ## Usage
 
 To start, you need to bind a keybinding for Bandit to enable, because there is no default keybinding for you, to reduce
