@@ -52,9 +52,3 @@ dependencies {
 
     runtimeOnly fileTree("libs")
 }
-
-configurations.all {
-    resolutionStrategy {
-        force("com.github.GTNewHorizons:GTNHLib:0.5.23:dev")
-    }
-}
