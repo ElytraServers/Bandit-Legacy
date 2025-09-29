@@ -296,6 +296,7 @@ data class VeinMiningPlayerData(
         val executor = getExecutorGenerator().generate(context)
 
         BanditMod.logger.info("Executing Vein Mining #${executionId}")
+        BanditMod.logger.debug("Executing Vein Mining #${executionId} at (${pos.x}, ${pos.y}, ${pos.z} @ ${world.provider.dimensionId}) ref ${blockAndMeta.first.unlocalizedName} @ ${blockAndMeta.second} te ${blockTileEntity?.toString() ?: "null"}")
         player.addChatMessage(ChatComponentTranslation("bandit.message.task-starting"))
         player.addChatMessage(ChatComponentTranslation("bandit.message.task-halt-hint"))
 
