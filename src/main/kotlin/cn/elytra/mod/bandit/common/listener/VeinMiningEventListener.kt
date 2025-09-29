@@ -12,6 +12,7 @@ import net.minecraft.entity.item.EntityXPOrb
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.item.ItemStack
 import net.minecraft.util.ChatComponentTranslation
+import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
 import net.minecraftforge.event.world.BlockEvent
 
@@ -25,7 +26,7 @@ class VeinMiningEventListener {
         @SubscribeEvent
         fun onBlockBreaking(e: BlockEvent.BreakEvent) {
             val p = e.player
-            if(p is EntityPlayerMP) {
+            if(p is EntityPlayerMP && p !is FakePlayer) {
                 val vmData = p.veinMiningData
                 if(vmData.hasJobRunning) return
                 if(vmData.veinMiningKeyPressed) {
@@ -63,7 +64,7 @@ class VeinMiningEventListener {
         @SubscribeEvent
         fun onPlayerTick(e: TickEvent.PlayerTickEvent) {
             val p = e.player
-            if(p is EntityPlayerMP) {
+            if(p is EntityPlayerMP && p !is FakePlayer) {
                 val vmData = p.veinMiningData
                 if(vmData.hasJobRunning) return
                 if(vmData.veinMiningKeyPressed) {
