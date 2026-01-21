@@ -1,4 +1,4 @@
-package cn.elytra.mod.bandit.mining
+package cn.elytra.mod.bandit.util
 
 import net.minecraft.item.ItemStack
 import org.jetbrains.annotations.ApiStatus
@@ -7,7 +7,6 @@ import org.jetbrains.annotations.ApiStatus
  * The place to hold the dropping items and xps when executing Vein Mining.
  */
 object HarvestCollector {
-
     private val collected = mutableListOf<ItemStack>()
     private var xpValue = 0
 

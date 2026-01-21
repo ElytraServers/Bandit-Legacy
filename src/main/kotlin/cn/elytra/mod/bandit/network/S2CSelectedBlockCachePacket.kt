@@ -8,7 +8,6 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext
 import io.netty.buffer.ByteBuf
 
 class S2CSelectedBlockCachePacket : IMessage {
-
     var posList: List<BlockPos> = emptyList()
 
     override fun fromBytes(buf: ByteBuf) {

@@ -11,6 +11,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import kotlinx.coroutines.*
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.gui.IUpdatePlayerListBox
+import org.apache.logging.log4j.LogManager
 import java.util.Queue
 import java.util.concurrent.*
 import kotlin.coroutines.CoroutineContext
@@ -33,6 +34,7 @@ object BanditCoroutines {
     var VeinMiningScope = CoroutineScope(pool)
 
     /** Dispatcher that runs the code on Minecraft Server Thread, to make sure the thread safety. */
+    @Deprecated("Use Dispatchers.Server instead")
     val ServerThreadDispatcher =
         object : CoroutineDispatcher() {
             override fun dispatch(context: CoroutineContext, block: Runnable) {
@@ -124,4 +126,43 @@ object BanditCoroutines {
             }
         }
     }
+
+    private val queueToExecute = ConcurrentLinkedQueue<Runnable>()
+
+    /**
+     * @return time to sleep after running the queue.
+     */
+    @JvmStatic
+    internal fun onMainThreadAboutToSleep(timeToSleep: Long): Long {
+        val timeStart = System.currentTimeMillis()
+
+        do {
+            val task = queueToExecute.poll() ?: break
+            try {
+                task.run()
+            } catch (th: Throwable) {
+                BanditMod.logger.warn("Exception occurred while executing task", th)
+            }
+        } while (System.currentTimeMillis() - timeStart < timeToSleep)
+
+        val timeElapsed = System.currentTimeMillis() - timeStart
+        return timeToSleep - timeElapsed
+    }
+
+    object ServerDispatcher : CoroutineDispatcher() {
+        private val log = LogManager.getLogger()
+
+        override fun isDispatchNeeded(context: CoroutineContext): Boolean = !isServerThread()
+
+        override fun dispatch(
+            context: CoroutineContext,
+            block: Runnable,
+        ) {
+            log.info("Added job", Throwable("STACKTRACE"))
+            queueToExecute += block
+        }
+    }
 }
+
+@Suppress("UnusedReceiverParameter")
+val Dispatchers.Server get() = BanditCoroutines.ServerDispatcher

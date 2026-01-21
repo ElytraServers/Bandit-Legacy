@@ -3,9 +3,10 @@ package cn.elytra.mod.bandit.client
 import cn.elytra.mod.bandit.BanditMod
 import cn.elytra.mod.bandit.MixinBridger
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.keyPressed
+import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.matcherIndex
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.onMouseInput
-import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.veinMiningBlockFilterId
-import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.veinMiningExecutorId
+import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.selectorIndex
+import cn.elytra.mod.bandit.common.registry.Named
 import cn.elytra.mod.bandit.network.BanditNetwork
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber
@@ -14,16 +15,18 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent
 import cpw.mods.fml.common.gameevent.InputEvent
 import cpw.mods.fml.common.gameevent.TickEvent
 import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.settings.KeyBinding
 import net.minecraftforge.client.event.RenderWorldLastEvent
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
+import kotlin.properties.Delegates
 
 /**
  * The object that handles all the things about Vein Mining on the client side.
  *
- * [veinMiningExecutorId] stores the id of selected executor.
- * [veinMiningBlockFilterId] stores the id of selected block filter.
+ * [selectorIndex] stores the id of selected executor.
+ * [matcherIndex] stores the id of selected block filter.
  *
  * They are all synchronized on login, by the server. And if they're modified, they need to be sync-ed manually.
  *
@@ -33,14 +36,23 @@ import org.lwjgl.input.Mouse
  * [onMouseInput] handles the mouse wheel operations, passing the data to [VeinMiningHUD] for the executor/filter selecting.
  *
  * @see VeinMiningHUD
- * @see cn.elytra.mod.bandit.common.mining.VeinMiningHandler
  */
 @Suppress("unused")
 @EventBusSubscriber
 object VeinMiningHandlerClient {
+    var selectorIndex by Delegates.observable(0) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            BanditNetwork.syncSettingsToServer(selectorIndex = newValue)
+        }
+    }
+    var matcherIndex by Delegates.observable(0) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            BanditNetwork.syncSettingsToServer(matcherIndex = newValue)
+        }
+    }
 
-    var veinMiningExecutorId = 0
-    var veinMiningBlockFilterId = 0
+    var matcherNames: List<Named<*>> = listOf(Named("DATA ERROR", "?", Unit))
+    var selectorNames: List<Named<*>> = listOf(Named("DATA ERROR", "?", Unit))
 
     var keyPressed = false
 
@@ -63,42 +75,46 @@ object VeinMiningHandlerClient {
     @JvmStatic
     @SubscribeEvent
     fun onKeyInput(e: InputEvent.KeyInputEvent) {
-        if(Minecraft.getMinecraft().thePlayer == null) return
+        if (Minecraft.getMinecraft().thePlayer == null) return
 
-        val keyPressedNow = if(statusKey.keyCode >= 0) {
-            Keyboard.isKeyDown(statusKey.keyCode)
-        } else {
-            val button = Mouse.getEventButton()
-            if(button == -1) {
-                keyPressed
+        val keyPressedNow =
+            if (statusKey.keyCode >= 0) {
+                Keyboard.isKeyDown(statusKey.keyCode)
             } else {
-                statusKey.keyCode + 100 == button && Mouse.getEventButtonState()
+                val button = Mouse.getEventButton()
+                if (button == -1) {
+                    keyPressed
+                } else {
+                    statusKey.keyCode + 100 == button && Mouse.getEventButtonState()
+                }
             }
-        }
-        if(keyPressedNow != keyPressed) {
+        if (keyPressedNow != keyPressed) {
             BanditNetwork.syncStatusToServer(keyPressedNow)
             keyPressed = keyPressedNow
         }
     }
 
     fun onMouseInput(d: Int): Boolean {
-        VeinMiningHUD.withActiveMenu {
-            if(d < 0) {
-                this.move(1)
-                return true
-            } else if(d > 0) {
-                this.move(-1)
-                return true
+        val delta =
+            when {
+                !keyPressed -> return false
+                d < 0 -> 1
+                d > 0 -> -1
+                else -> return false
             }
+        if (GuiScreen.isShiftKeyDown()) {
+            selectorIndex += delta
+        } else if (GuiScreen.isCtrlKeyDown()) {
+            matcherIndex += delta
         }
-        return false
+        return true
     }
 
     @JvmStatic
     @SubscribeEvent
     fun onRenderHUD(e: TickEvent.RenderTickEvent) {
-        if(e.phase != TickEvent.Phase.END) return
-        if(keyPressed) {
+        if (e.phase != TickEvent.Phase.END) return
+        if (keyPressed) {
             VeinMiningHUD.render()
         }
     }
@@ -107,8 +123,8 @@ object VeinMiningHandlerClient {
     @SubscribeEvent
     fun onRenderSelectedBlock(e: RenderWorldLastEvent) {
         val selectedBlockPosList = selectedBlockPosList
-        if(keyPressed && selectedBlockPosList != null && selectedBlockPosList.isNotEmpty()) {
-            if(selectedBlockPosList.size <= maxSelectionRenderCount) {
+        if (keyPressed && !selectedBlockPosList.isNullOrEmpty()) {
+            if (selectedBlockPosList.size <= maxSelectionRenderCount) {
                 VeinMiningSelectionRenderer.render(e, selectedBlockPosList)
             }
         }
@@ -117,11 +133,10 @@ object VeinMiningHandlerClient {
     @JvmStatic
     @SubscribeEvent
     fun onConfigReloaded(e: ConfigChangedEvent.PostConfigChangedEvent) {
-        if(e.modID == BanditMod.MOD_ID) {
+        if (e.modID == BanditMod.MOD_ID) {
             BanditMod.logger.info("Refreshing configuration")
             VeinMiningConfigClient.reload()
             VeinMiningConfigClient.save()
         }
     }
-
 }
