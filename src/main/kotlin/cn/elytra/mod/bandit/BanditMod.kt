@@ -20,7 +20,6 @@ import org.apache.logging.log4j.Logger
     guiFactory = "cn.elytra.mod.bandit.client.BanditConfigGuiFactory",
 )
 object BanditMod {
-
     const val MOD_ID = "bandit"
     const val NAME = "Bandit Legacy"
 
@@ -42,13 +41,13 @@ object BanditMod {
     init {
         fun logMod(id: String) {
             try {
-                if(Loader.isModLoaded(id)) {
+                if (Loader.isModLoaded(id)) {
                     val mod = Loader.instance().modList.first { it.modId == id }
                     val version = mod.version
                     val metadataVersion = mod.metadata.version
                     logger.debug("Mod {} found with version {} (metadata {})", id, version, metadataVersion)
                 }
-            } catch(e: Exception) {
+            } catch (e: Exception) {
                 logger.warn("Failed to inspect the information of {}", id, e)
             }
         }
@@ -75,5 +74,4 @@ object BanditMod {
     fun serverStopping(e: FMLServerStoppingEvent) {
         proxy.serverStopping(e)
     }
-
 }

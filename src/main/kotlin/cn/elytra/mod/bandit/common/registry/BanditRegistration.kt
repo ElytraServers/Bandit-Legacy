@@ -5,7 +5,7 @@ import cn.elytra.mod.bandit.mining2.matcher.Matcher
 import cn.elytra.mod.bandit.mining2.selector.BuiltinSelectors
 import cn.elytra.mod.bandit.mining2.selector.Selector
 
-internal object BanditRegisteration {
+internal object BanditRegistration {
     val matchers: MutableList<Named<Matcher>> = mutableListOf()
     val selectors: MutableList<Named<Selector>> = mutableListOf()
 

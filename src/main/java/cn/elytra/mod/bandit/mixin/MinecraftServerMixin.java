@@ -1,6 +1,7 @@
 package cn.elytra.mod.bandit.mixin;
 
 import cn.elytra.mod.bandit.common.BanditCoroutines;
+import cn.elytra.mod.bandit.lib.coroutine.LibCoroutines;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.server.MinecraftServer;
@@ -19,7 +20,7 @@ public class MinecraftServerMixin {
 
     @WrapOperation(method = "run", at = @At(value = "INVOKE", target = "Ljava/lang/Thread;sleep(J)V"))
     private void bandit$hookThreadSleep(long timeToSleep, Operation<Void> original) {
-        long newTimeToSleep = BanditCoroutines.onMainThreadAboutToSleep$bandit(timeToSleep);
+        long newTimeToSleep = LibCoroutines.onMainThreadAboutToSleep$bandit(timeToSleep);
         if(newTimeToSleep > 0) original.call(newTimeToSleep);
     }
 

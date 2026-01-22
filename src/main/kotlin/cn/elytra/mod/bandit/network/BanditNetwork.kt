@@ -1,7 +1,7 @@
 package cn.elytra.mod.bandit.network
 
 import cn.elytra.mod.bandit.BanditMod
-import cn.elytra.mod.bandit.common.registry.BanditRegisteration
+import cn.elytra.mod.bandit.common.registry.BanditRegistration
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import cpw.mods.fml.common.event.FMLPreInitializationEvent
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper
@@ -91,8 +91,8 @@ object BanditNetwork {
     fun syncServerRegistrationToClient(p: EntityPlayerMP) {
         networkW.sendTo(
             S2CRegistrationSyncPacket().apply {
-                this.matcherNames = BanditRegisteration.matchers
-                this.selectorNames = BanditRegisteration.selectors
+                this.matcherNames = BanditRegistration.matchers
+                this.selectorNames = BanditRegistration.selectors
             },
             p,
         )

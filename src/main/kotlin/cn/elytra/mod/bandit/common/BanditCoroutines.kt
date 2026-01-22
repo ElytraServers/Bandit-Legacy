@@ -3,6 +3,7 @@ package cn.elytra.mod.bandit.common
 import cn.elytra.mod.bandit.BanditMod
 import cn.elytra.mod.bandit.common.BanditCoroutines.callFromMainThread
 import cn.elytra.mod.bandit.common.BanditCoroutines.initServer
+import cn.elytra.mod.bandit.lib.coroutine.ServerDispatcher
 import com.google.common.collect.Queues
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -11,13 +12,12 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import kotlinx.coroutines.*
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.gui.IUpdatePlayerListBox
-import org.apache.logging.log4j.LogManager
 import java.util.Queue
 import java.util.concurrent.*
 import kotlin.coroutines.CoroutineContext
 
+@Deprecated("Use LibCoroutines instead")
 object BanditCoroutines {
-
     private val pool =
         ThreadPoolExecutor(
             4,
@@ -26,9 +26,8 @@ object BanditCoroutines {
             TimeUnit.MINUTES,
             ArrayBlockingQueue(6),
             ThreadFactoryBuilder().setNameFormat("BanditThread-%d").setDaemon(true).build(),
-            ThreadPoolExecutor.DiscardPolicy()
-        )
-            .asCoroutineDispatcher()
+            ThreadPoolExecutor.DiscardPolicy(),
+        ).asCoroutineDispatcher()
 
     /** The scope of VeinMining tasks. */
     var VeinMiningScope = CoroutineScope(pool)
@@ -37,8 +36,11 @@ object BanditCoroutines {
     @Deprecated("Use Dispatchers.Server instead")
     val ServerThreadDispatcher =
         object : CoroutineDispatcher() {
-            override fun dispatch(context: CoroutineContext, block: Runnable) {
-                if(isServerThread()) {
+            override fun dispatch(
+                context: CoroutineContext,
+                block: Runnable,
+            ) {
+                if (isServerThread()) {
                     block.run()
                 } else {
                     callFromMainThread(Executors.callable(block))
@@ -61,40 +63,37 @@ object BanditCoroutines {
      * @see initServer
      * @see callFromMainThread
      */
-    val ticking = Runnable {
-        synchronized(jobQueue) {
-            while(jobQueue.isNotEmpty()) {
-                val task = jobQueue.poll()
-                try {
-                    task.run()
-                    task.get()
-                } catch(e: ExecutionException) {
-                    BanditMod.logger.error("Error executing task", e)
-                } catch(e: InterruptedException) {
-                    BanditMod.logger.error("Error executing task", e)
+    val ticking =
+        Runnable {
+            synchronized(jobQueue) {
+                while (jobQueue.isNotEmpty()) {
+                    val task = jobQueue.poll()
+                    try {
+                        task.run()
+                        task.get()
+                    } catch (e: ExecutionException) {
+                        BanditMod.logger.error("Error executing task", e)
+                    } catch (e: InterruptedException) {
+                        BanditMod.logger.error("Error executing task", e)
+                    }
                 }
             }
+            // set the server thread reference
+            if (serverThread == null) {
+                serverThread = Thread.currentThread()
+            }
         }
-        // set the server thread reference
-        if(serverThread == null) {
-            serverThread = Thread.currentThread()
-        }
-    }
 
     /**
      * @return `true` if the call site is on Server Thread; `false` if the server field is not
      * initialized.
      */
-    fun isServerThread(): Boolean {
-        return if(serverThread == null) false else Thread.currentThread() == serverThread
-    }
+    fun isServerThread(): Boolean = if (serverThread == null) false else Thread.currentThread() == serverThread
 
     /**
      * @return `true` if the server is running; also `true` if the server field is not initialized.
      */
-    private fun isServerNotStopped(): Boolean {
-        return server?.isServerStopped != true
-    }
+    private fun isServerNotStopped(): Boolean = server?.isServerStopped != true
 
     /** Initialize the required fields in this object. */
     internal fun initServer(s: MinecraftServer) {
@@ -111,7 +110,7 @@ object BanditCoroutines {
      */
     @Suppress("UnstableApiUsage")
     internal fun <T> callFromMainThread(callable: Callable<T>): ListenableFuture<T> {
-        if(!isServerThread() && isServerNotStopped()) {
+        if (!isServerThread() && isServerNotStopped()) {
             val listenableFutureTask = ListenableFutureTask.create(callable)
 
             synchronized(jobQueue) {
@@ -121,48 +120,13 @@ object BanditCoroutines {
         } else {
             return try {
                 Futures.immediateFuture(callable.call())
-            } catch(e: Exception) {
+            } catch (e: Exception) {
                 Futures.immediateFailedCheckedFuture(e)
             }
-        }
-    }
-
-    private val queueToExecute = ConcurrentLinkedQueue<Runnable>()
-
-    /**
-     * @return time to sleep after running the queue.
-     */
-    @JvmStatic
-    internal fun onMainThreadAboutToSleep(timeToSleep: Long): Long {
-        val timeStart = System.currentTimeMillis()
-
-        do {
-            val task = queueToExecute.poll() ?: break
-            try {
-                task.run()
-            } catch (th: Throwable) {
-                BanditMod.logger.warn("Exception occurred while executing task", th)
-            }
-        } while (System.currentTimeMillis() - timeStart < timeToSleep)
-
-        val timeElapsed = System.currentTimeMillis() - timeStart
-        return timeToSleep - timeElapsed
-    }
-
-    object ServerDispatcher : CoroutineDispatcher() {
-        private val log = LogManager.getLogger()
-
-        override fun isDispatchNeeded(context: CoroutineContext): Boolean = !isServerThread()
-
-        override fun dispatch(
-            context: CoroutineContext,
-            block: Runnable,
-        ) {
-            log.info("Added job", Throwable("STACKTRACE"))
-            queueToExecute += block
         }
     }
 }
 
 @Suppress("UnusedReceiverParameter")
-val Dispatchers.Server get() = BanditCoroutines.ServerDispatcher
+@Deprecated("Use Dispatchers.Server instead", ReplaceWith("Server", imports = ["cn.elytra.mod.bandit.lib.coroutine.Server"]))
+val Dispatchers.Server get() = ServerDispatcher

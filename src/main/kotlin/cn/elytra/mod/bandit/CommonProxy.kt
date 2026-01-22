@@ -2,6 +2,7 @@ package cn.elytra.mod.bandit
 
 import cn.elytra.mod.bandit.common.BanditCoroutines
 import cn.elytra.mod.bandit.compat.GT5UCompat
+import cn.elytra.mod.bandit.lib.coroutine.LibCoroutines
 import cn.elytra.mod.bandit.network.BanditNetwork
 import cpw.mods.fml.common.Loader
 import cpw.mods.fml.common.event.FMLPreInitializationEvent
@@ -28,9 +29,13 @@ open class CommonProxy {
 
         BanditMod.logger.info("Initializing coroutines")
         BanditCoroutines.initServer(e.server)
+
+        LibCoroutines.initServer(e.server)
     }
 
     open fun serverStopping(event: FMLServerStoppingEvent) {
         BanditCoroutines.VeinMiningScope.cancel("server stopping")
+
+        LibCoroutines.initServer(null)
     }
 }

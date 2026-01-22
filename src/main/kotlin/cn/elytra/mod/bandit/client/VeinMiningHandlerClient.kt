@@ -8,6 +8,7 @@ import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.onMouseInput
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.selectorIndex
 import cn.elytra.mod.bandit.common.registry.Named
 import cn.elytra.mod.bandit.network.BanditNetwork
+import cn.elytra.mod.bandit.util.remEuclid
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber
 import cpw.mods.fml.client.event.ConfigChangedEvent
@@ -41,11 +42,13 @@ import kotlin.properties.Delegates
 @EventBusSubscriber
 object VeinMiningHandlerClient {
     var selectorIndex by Delegates.observable(0) { _, oldValue, newValue ->
+        check(newValue in selectorNames.indices)
         if (oldValue != newValue) {
             BanditNetwork.syncSettingsToServer(selectorIndex = newValue)
         }
     }
     var matcherIndex by Delegates.observable(0) { _, oldValue, newValue ->
+        check(newValue in matcherNames.indices)
         if (oldValue != newValue) {
             BanditNetwork.syncSettingsToServer(matcherIndex = newValue)
         }
@@ -103,9 +106,9 @@ object VeinMiningHandlerClient {
                 else -> return false
             }
         if (GuiScreen.isShiftKeyDown()) {
-            selectorIndex += delta
+            selectorIndex = (selectorIndex + delta) remEuclid selectorNames.size
         } else if (GuiScreen.isCtrlKeyDown()) {
-            matcherIndex += delta
+            matcherIndex = (matcherIndex + delta) remEuclid matcherNames.size
         }
         return true
     }

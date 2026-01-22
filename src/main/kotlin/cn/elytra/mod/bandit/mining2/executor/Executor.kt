@@ -5,15 +5,15 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface Executor {
     /**
-     * The state flow of collected block positions that will be vein-mined
+     * The up-to-date list of found block positions to be vein-mined
+     *
+     * It will remain empty before you call [startFindPositions].
      */
     val foundPositions: StateFlow<List<BlockPos>>
 
     fun startFindPositions()
 
     fun startVeinMining()
-
-    fun stopAll()
 
     /**
      * @return `true` if the _vein-mining_ job is currently running (active)

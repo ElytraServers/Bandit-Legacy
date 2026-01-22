@@ -1,6 +1,7 @@
 package cn.elytra.mod.bandit.client
 
 import cn.elytra.mod.bandit.common.registry.Named
+import cn.elytra.mod.bandit.util.remEuclid
 import codechicken.lib.gui.GuiDraw
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiScreen
@@ -132,7 +133,7 @@ object VeinMiningHUD {
             heightBase,
         )
 
-    private fun <E> List<E>.getLoop(index: Int): E = get(index + size % size)
+    private fun <E> List<E>.getLoop(index: Int): E = get(index remEuclid size)
 
     private fun Named<*>.getString(): String {
         val translated = I18n.format(translationKey)

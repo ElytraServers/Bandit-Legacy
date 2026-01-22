@@ -1,12 +1,12 @@
 package cn.elytra.mod.bandit.common.listener
 
 import cn.elytra.mod.bandit.common.player_data.veinMiningData
-import cn.elytra.mod.bandit.common.registry.BanditRegisteration
-import cn.elytra.mod.bandit.mining2.MiningV2
-import cn.elytra.mod.bandit.mining2.session.isRunning
+import cn.elytra.mod.bandit.common.registry.BanditRegistration
+import cn.elytra.mod.bandit.mining2.VeinMiningPlayerHandle
+import cn.elytra.mod.bandit.mining2.updateContextByPlayerRaytrace
 import cn.elytra.mod.bandit.network.BanditNetwork
 import cn.elytra.mod.bandit.util.HarvestCollector
-import codechicken.lib.raytracer.RayTracer
+import cn.elytra.mod.bandit.util.newBlockSnapshot
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber
 import cpw.mods.fml.common.eventhandler.SubscribeEvent
@@ -18,7 +18,6 @@ import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.item.ItemStack
 import net.minecraft.util.ChatComponentText
 import net.minecraft.util.ChatComponentTranslation
-import net.minecraft.util.MovingObjectPosition
 import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
 import net.minecraftforge.event.world.BlockEvent
@@ -27,17 +26,20 @@ import net.minecraftforge.event.world.BlockEvent
 @EventBusSubscriber
 class VeinMiningEventListener {
     companion object {
+        private fun BlockEvent.getBlockPos(): BlockPos = BlockPos(x, y, z)
+
         @JvmStatic
         @SubscribeEvent
         fun onBlockBreaking(e: BlockEvent.BreakEvent) {
             val p = e.player
             if (p is EntityPlayerMP && p !is FakePlayer) {
-                val session = MiningV2.getSession(p)
-                if (session.isRunning()) return
-
-                if (p.veinMiningData.veinMiningKeyPressed) {
-                    MiningV2.newSession(p, BlockPos(e.x, e.y, e.z)).startVeinMining()
-                    e.isCanceled = true
+                val h = VeinMiningPlayerHandle.get(p)
+                if (h.canUpdateContext()) {
+                    h.updateContext(newBlockSnapshot(p.worldObj, e.getBlockPos()))
+                    if (h.activatedVeinMining) {
+                        h.startVeinMining()
+                        e.isCanceled = true
+                    }
                 }
             }
         }
@@ -47,14 +49,12 @@ class VeinMiningEventListener {
         fun onPlayerTick(e: TickEvent.PlayerTickEvent) {
             val p = e.player
             if (p is EntityPlayerMP && p !is FakePlayer) {
-                val session = MiningV2.getSession(p)
-                if (session.isRunning()) return
-
-                if (p.veinMiningData.veinMiningKeyPressed) {
-                    val mop = RayTracer.reTrace(p.worldObj, p)
-                    if (mop.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return
-
-                    MiningV2.newSession(p, BlockPos(mop.blockX, mop.blockY, mop.blockZ)).startFindPositions()
+                val h = VeinMiningPlayerHandle.get(p)
+                if (h.canUpdateContext()) {
+                    h.updateContextByPlayerRaytrace(p)
+                    if (h.activatedVeinMining) {
+                        h.startBlockFinding()
+                    }
                 }
             }
         }
@@ -91,19 +91,20 @@ class VeinMiningEventListener {
                 val selector = p.veinMiningData.selectorIndex
                 BanditNetwork.syncServerRegistrationToClient(p)
                 BanditNetwork.syncSettingsToClient(p, selector, matcher)
-                p.addChatMessage( // TODO: REMOVE THIS
+                p.addChatMessage(
+                    // TODO: REMOVE THIS
                     ChatComponentText(
                         "Server registration [DEBUG]: matchers " +
-                            BanditRegisteration.matchers.joinToString(",", "[", "]") { it.name } +
+                            BanditRegistration.matchers.joinToString(",", "[", "]") { it.name } +
                             " selectors " +
-                            BanditRegisteration.selectors.joinToString(",", "[", "]") { it.name },
+                            BanditRegistration.selectors.joinToString(",", "[", "]") { it.name },
                     ),
                 )
                 p.addChatMessage(
                     ChatComponentTranslation(
                         "bandit.message.sync-from-server",
-                        ChatComponentTranslation(BanditRegisteration.getMatcher(matcher).translationKey),
-                        ChatComponentTranslation(BanditRegisteration.getSelector(selector).translationKey),
+                        ChatComponentTranslation(BanditRegistration.getMatcher(matcher).translationKey),
+                        ChatComponentTranslation(BanditRegistration.getSelector(selector).translationKey),
                     ),
                 )
             }
@@ -112,7 +113,7 @@ class VeinMiningEventListener {
         @JvmStatic
         @SubscribeEvent
         fun onPlayerLeave(e: PlayerEvent.PlayerLoggedOutEvent) {
-            MiningV2.dropAny(e.player)
+            VeinMiningPlayerHandle.removeByEvent(e)
         }
     }
 }

@@ -6,9 +6,12 @@ import cn.elytra.mod.bandit.mining2.matcher.BuiltinMatchers
 import cn.elytra.mod.bandit.mining2.matcher.Matcher
 import cn.elytra.mod.bandit.mining2.selector.BuiltinSelectors
 import cn.elytra.mod.bandit.mining2.selector.Selector
+import cn.elytra.mod.bandit.util.MinecraftUtils
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import net.minecraft.entity.player.EntityPlayerMP
-import net.minecraft.server.MinecraftServer
 import net.minecraft.world.WorldServer
 import net.minecraftforge.common.util.BlockSnapshot
 
@@ -19,29 +22,27 @@ data class VeinMiningSessionImpl(
     private val worldDimId: Int,
 ) : VeinMiningSession {
     constructor(
-        coroutineScope: CoroutineScope,
+        parentScope: CoroutineScope,
         player: EntityPlayerMP,
         world: WorldServer,
         triggerSnapshot: BlockSnapshot,
-    ) : this(coroutineScope, triggerSnapshot, player.uniqueID.toString(), world.provider.dimensionId)
+    ) : this(
+        CoroutineScope(parentScope.coroutineContext + SupervisorJob() + CoroutineName("VMSession") + Dispatchers.Unconfined),
+        triggerSnapshot,
+        player.uniqueID.toString(),
+        world.provider.dimensionId,
+    )
 
     override val executor: Executor = ExecutorImpl(this)
 
     override val player: EntityPlayerMP
         get() =
-            MinecraftServer
-                .getServer()
-                .configurationManager
-                .playerEntityList
-                .firstOrNull { it.uniqueID.toString() == playerUniqueId }
+            MinecraftUtils.findPlayerByUniqueId(playerUniqueId)
                 ?: error("the player can't be found in the server, is he offline?")
 
     override val world: WorldServer
         get() =
-            MinecraftServer
-                .getServer()
-                .worldServers
-                .firstOrNull { it.provider.dimensionId == worldDimId }
+            MinecraftUtils.findWorldByDimId(worldDimId)
                 ?: error("the world can't be found in the server, is it broken?")
 
     override val matcher: Matcher

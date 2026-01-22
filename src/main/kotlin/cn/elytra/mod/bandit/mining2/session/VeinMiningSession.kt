@@ -7,10 +7,11 @@ import cn.elytra.mod.bandit.mining2.selector.Selector
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
-import net.minecraft.block.Block
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.tileentity.TileEntity
+import net.minecraft.util.ChatComponentText
 import net.minecraft.world.WorldServer
 import net.minecraftforge.common.util.BlockSnapshot
 
@@ -46,6 +47,8 @@ interface VeinMiningSession {
 
     val executor: Executor
 
+    val foundPositions: StateFlow<List<BlockPos>> get() = executor.foundPositions
+
     /**
      * @return `true` if the session is valid, where the player and the world is valid, the coroutine scope is active.
      */
@@ -62,8 +65,8 @@ interface VeinMiningSession {
     /**
      * Drop the session and release all resource, canceling jobs
      */
-    fun drop() {
-        coroutineScope.cancel("Session dropped")
+    fun cancel(reason: String = "Session dropped") {
+        coroutineScope.cancel(reason)
     }
 
     fun startFindPositions() {
@@ -77,16 +80,17 @@ interface VeinMiningSession {
     fun startVeinMining() {
         try {
             executor.startVeinMining()
+            player.addChatMessage(ChatComponentText("VM started"))
+            executor.invokeOnComplete {
+                player.addChatMessage(ChatComponentText("VM finished"))
+            }
         } catch (e: Exception) {
             BanditMod.logger.error("Failed to start vein mining", e)
         }
     }
+
+    fun invokeOnComplete(action: (Throwable?) -> Unit) = executor.invokeOnComplete(action)
 }
-
-fun VeinMiningSession.getBlockSnapshot(bp: BlockPos): BlockSnapshot = BlockSnapshot.getBlockSnapshot(world, bp.x, bp.y, bp.z)
-
-fun VeinMiningSession.getBlockAndMetadata(bp: BlockPos): Pair<Block, Int> =
-    world.getBlock(bp.x, bp.y, bp.z) to world.getBlockMetadata(bp.x, bp.y, bp.z)
 
 @Suppress("UNCHECKED_CAST")
 fun <T : TileEntity> VeinMiningSession.getBlockTileEntity(bp: BlockPos): T? = world.getTileEntity(bp.x, bp.y, bp.z) as? T
