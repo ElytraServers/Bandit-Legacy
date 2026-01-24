@@ -42,13 +42,13 @@ object BanditCommand : CommandBase() {
             // ===== 第一级：/bandit <这里> =====
             1 -> getListOfStringsMatchingLastWord(
                 args,
-                "help",
-                "executor-generator",
-                "block-filter",
                 "stop",
+                "help",
                 "drop_pos",
                 "drop_timing",
-                "stop_on_release"
+                "stop_on_release",
+                "block-filter",
+                "executor-generator",
             )
 
             // ===== 第二级：/bandit <sub> <这里> =====
