@@ -23,7 +23,6 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import net.minecraft.block.Block
-import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.nbt.NBTTagCompound
@@ -299,8 +298,8 @@ data class VeinMiningPlayerData(
         BanditMod.logger.info("Executing Vein Mining #${executionId}")
         BanditMod.logger.debug("Executing Vein Mining #${executionId} at (${pos.x}, ${pos.y}, ${pos.z} @ ${world.provider.dimensionId}) ref ${blockAndMeta.first.unlocalizedName} @ ${blockAndMeta.second} te ${blockTileEntity?.toString() ?: "null"}")
         val notices = mutableListOf<Long>()
-        notices.add(VeinMiningHUD.pushNotice(I18n.format("bandit.message.task-starting")))
-        notices.add(VeinMiningHUD.pushNotice(I18n.format("bandit.message.task-halt-hint")))
+        notices.add(VeinMiningHUD.pushNotice(1))
+        notices.add(VeinMiningHUD.pushNotice(2))
 
         val job = BanditCoroutines.VeinMiningScope.launch(start = CoroutineStart.LAZY) {
             world.playSoundEffect(player.posX, player.posY, player.posZ, "note.harp", 3.0F, 1.0F)
@@ -311,16 +310,15 @@ data class VeinMiningPlayerData(
             if(it != null) {
                 when(it) {
                     is KeyReleaseCancellation -> {
-                        notices.add(VeinMiningHUD.pushNotice(I18n.format("bandit.message.task-stop.key-release")))
+                        notices.add(VeinMiningHUD.pushNotice(3))
                     }
 
                     else -> BanditMod.logger.warn("Job was cancelled because of an throwable", it)
                 }
             }
-            notices.add(VeinMiningHUD.pushNotice(I18n.format(
-                    "bandit.message.task-done",
+            notices.add(VeinMiningHUD.pushNotice(4,
                     context.statBlocksMined.get(),
-                    context.statItemDropped.values.sum())))
+                    context.statItemDropped.values.sum()))
             for (notice in notices) {
                 VeinMiningHUD.endNotice(notice, fadeDelay = 40)
             }

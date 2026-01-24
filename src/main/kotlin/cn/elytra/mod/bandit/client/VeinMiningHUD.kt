@@ -88,8 +88,19 @@ object VeinMiningHUD {
         }
     }
 
-    fun pushNotice(text: String): Long {
+    fun pushNotice(noticeType: Int, statBlocksMined: Int = 0, statItemDropped: Int = 0): Long {
         val id = System.nanoTime()
+        val text = when(noticeType) {
+            1 -> I18n.format("bandit.message.task-starting")
+            2 -> I18n.format("bandit.message.task-halt-hint")
+            3 -> I18n.format("bandit.message.task-stop.key-release")
+            4 -> I18n.format(
+                "bandit.message.task-done",
+                statBlocksMined,
+                statItemDropped)
+
+            else -> ""
+        }
         notices += HudNotice(
             id = id,
             text = text,
