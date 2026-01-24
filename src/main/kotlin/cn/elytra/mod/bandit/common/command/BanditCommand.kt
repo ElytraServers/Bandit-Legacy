@@ -36,22 +36,45 @@ object BanditCommand : CommandBase() {
     }
 
     override fun addTabCompletionOptions(sender: ICommandSender?, args: Array<out String?>?): List<String?>? {
-        val list = args?.toMutableList()
-        if (list != null && list.size == 1) {
-            return getListOfStringsMatchingLastWord(
-                    args,
-                    *listOf(
-                        "help",
-                        "executor-generator",
-                        "block-filter",
-                        "stop",
-                        "drop_pos",
-                        "drop_timing",
-                        "stop_on_release"
-                    ).toTypedArray()
-                )
+        if (args.isNullOrEmpty()) return super.addTabCompletionOptions(sender, args)
+        return when (args.size) {
+
+            // ===== 第一级：/bandit <这里> =====
+            1 -> getListOfStringsMatchingLastWord(
+                args,
+                "help",
+                "executor-generator",
+                "block-filter",
+                "stop",
+                "drop_pos",
+                "drop_timing",
+                "stop_on_release"
+            )
+
+            // ===== 第二级：/bandit <sub> <这里> =====
+            2 -> when (args[0]) {
+                "executor-generator", "executor" -> listOf("[Leave it blank to view the prompt]")
+                "block-filter", "filter" -> listOf("[Leave it blank to view the prompt]")
+                "drop_pos" ->
+                    getListOfStringsMatchingLastWord(
+                        args,
+                        *getValidEnumValues<DropPosition>().toTypedArray()
+                    )
+                "drop_timing" ->
+                    getListOfStringsMatchingLastWord(
+                        args,
+                        *getValidEnumValues<DropTiming>().toTypedArray()
+                    )
+                "stop_on_release" ->
+                    getListOfStringsMatchingLastWord(
+                        args,
+                        "true",
+                        "false"
+                    )
+                else -> super.addTabCompletionOptions(sender, args)
+            }
+            else -> super.addTabCompletionOptions(sender, args)
         }
-        return super.addTabCompletionOptions(sender, args)
     }
 
     private fun ICommandSender.withEntityPlayer(block: (EntityPlayerMP) -> Unit) {

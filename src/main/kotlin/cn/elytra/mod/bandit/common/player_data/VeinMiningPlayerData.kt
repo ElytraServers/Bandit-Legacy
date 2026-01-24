@@ -1,7 +1,6 @@
 package cn.elytra.mod.bandit.common.player_data
 
 import cn.elytra.mod.bandit.BanditMod
-import cn.elytra.mod.bandit.client.VeinMiningHUD
 import cn.elytra.mod.bandit.common.BanditCoroutines
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext.DropPosition
@@ -298,8 +297,8 @@ data class VeinMiningPlayerData(
         BanditMod.logger.info("Executing Vein Mining #${executionId}")
         BanditMod.logger.debug("Executing Vein Mining #${executionId} at (${pos.x}, ${pos.y}, ${pos.z} @ ${world.provider.dimensionId}) ref ${blockAndMeta.first.unlocalizedName} @ ${blockAndMeta.second} te ${blockTileEntity?.toString() ?: "null"}")
         val notices = mutableListOf<Long>()
-        notices.add(VeinMiningHUD.pushNotice(1))
-        notices.add(VeinMiningHUD.pushNotice(2))
+        notices.add(BanditNetwork.pushSimpleNoticeToClient(player.asMP, VeinMiningNoticeType.TASK_STARTING))
+        notices.add(BanditNetwork.pushSimpleNoticeToClient(player.asMP, VeinMiningNoticeType.TASK_HALT_HINT))
 
         val job = BanditCoroutines.VeinMiningScope.launch(start = CoroutineStart.LAZY) {
             world.playSoundEffect(player.posX, player.posY, player.posZ, "note.harp", 3.0F, 1.0F)
@@ -307,21 +306,33 @@ data class VeinMiningPlayerData(
         }
         job.invokeOnCompletion {
             BanditMod.logger.info("VeinMining #${executionId} has ended")
-            if(it != null) {
-                when(it) {
-                    is KeyReleaseCancellation -> {
-                        notices.add(VeinMiningHUD.pushNotice(3))
-                    }
 
-                    else -> BanditMod.logger.warn("Job was cancelled because of an throwable", it)
+            for (noticeId in notices) {
+                BanditNetwork.endNoticeToClient(player.asMP, noticeId, fadeDelay = 0, fadeTicks = 0)
+            }
+
+            when(it) {
+                is KeyReleaseCancellation -> {
+                    BanditNetwork.pushSimpleNoticeToClient(player.asMP,
+                        noticeType = VeinMiningNoticeType.TASK_STOP_KEY_RELEASE,
+                        fadeDelay = 10,
+                        fadeTicks = 20
+                    )
                 }
+
+                else -> BanditMod.logger.warn("Job was cancelled because of an throwable", it)
             }
-            notices.add(VeinMiningHUD.pushNotice(4,
-                    context.statBlocksMined.get(),
-                    context.statItemDropped.values.sum()))
-            for (notice in notices) {
-                VeinMiningHUD.endNotice(notice, fadeDelay = 40)
-            }
+
+            // 完成：发送任务完成通知，40tick后渐隐，渐隐20tick
+            BanditNetwork.pushCompletionNoticeToClient(
+                player.asMP,
+                extraData = mapOf(
+                    "statBlocksMined" to context.statBlocksMined.get(),
+                    "statItemDropped" to context.statItemDropped.values.sum()
+                ),
+                fadeDelay = 40,
+                fadeTicks = 20
+            )
 
             // play sound effects
             world.playSoundEffect(player.posX, player.posY, player.posZ, "note.harp", 3.0F, 3.5F)

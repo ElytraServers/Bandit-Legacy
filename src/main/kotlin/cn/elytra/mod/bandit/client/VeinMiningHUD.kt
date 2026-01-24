@@ -1,5 +1,6 @@
 package cn.elytra.mod.bandit.client
 
+import cn.elytra.mod.bandit.common.player_data.VeinMiningNoticeType
 import cn.elytra.mod.bandit.common.util.HasUnlocalizedName
 import cn.elytra.mod.bandit.mining.BlockFilterRegistry
 import cn.elytra.mod.bandit.mining.ExecutorGeneratorRegistry
@@ -26,10 +27,11 @@ object VeinMiningHUD {
 
     data class HudNotice(
         val id: Long,             // 唯一 ID
-        val text: String,
+        var noticeType: Int = 0,
         var startTick: Long,
         var fadeDelay: Int = 0,   // 延迟渐隐 tick
         var fadeTicks: Int = 20,  // 渐隐时长
+        var extraData: Map<String, Int> = emptyMap(),  // 额外数据
         var isEnded: Boolean = false
     )
     private val notices = mutableListOf<HudNotice>()
@@ -88,37 +90,42 @@ object VeinMiningHUD {
         }
     }
 
-    fun pushNotice(noticeType: Int, statBlocksMined: Int = 0, statItemDropped: Int = 0): Long {
-        val id = System.nanoTime()
-        val text = when(noticeType) {
-            1 -> I18n.format("bandit.message.task-starting")
-            2 -> I18n.format("bandit.message.task-halt-hint")
-            3 -> I18n.format("bandit.message.task-stop.key-release")
-            4 -> I18n.format(
-                "bandit.message.task-done",
-                statBlocksMined,
-                statItemDropped)
-
-            else -> ""
+    fun pushNotice(
+        noticeType: Int,
+        id: Long,
+        extraData: Map<String, Int> = emptyMap(),
+        fadeDelay: Int = 0,
+        fadeTicks: Int = 0
+    ): Long {
+        val isEnd = !(fadeDelay == 0 && fadeTicks == 0)
+        var now: Long = 0
+        if (isEnd) {
+            now = Minecraft.getMinecraft().theWorld.totalWorldTime
         }
         notices += HudNotice(
             id = id,
-            text = text,
-            startTick = Minecraft.getMinecraft().theWorld.totalWorldTime,
-            fadeDelay = 0,
-            fadeTicks = 20,
-            isEnded = false
+            noticeType = noticeType,
+            extraData = extraData,
+            startTick = now,
+            fadeDelay = fadeDelay,
+            fadeTicks = fadeTicks,
+            isEnded = isEnd
         )
         VeinMiningHandlerClient.noticeActive = true
         return id
     }
 
-    fun endNotice(id: Long, fadeDelay: Int = 30) {
+    fun endNotice(id: Long, fadeDelay: Int = 0, fadeTicks: Int = 20) {
+        if (fadeTicks == 0 && fadeDelay == 0) {
+            notices.removeIf { it.id == id }
+            return
+        }
         val now = Minecraft.getMinecraft().theWorld.totalWorldTime
         notices.find { it.id == id && !it.isEnded }?.apply {
             isEnded = true
             startTick = now
             this.fadeDelay = fadeDelay
+            this.fadeTicks = fadeTicks
         }
     }
 
@@ -134,7 +141,7 @@ object VeinMiningHUD {
             val alpha = when {
                 !n.isEnded -> 1f
                 age <= n.fadeDelay -> 1f
-                age <= n.fadeDelay + n.fadeTicks -> 1f - (age - n.fadeDelay) / n.fadeTicks.toFloat()
+                age < n.fadeDelay + n.fadeTicks -> 1f - (age - n.fadeDelay) / n.fadeTicks.toFloat()
                 else -> {
                     iter.remove()
                     continue
@@ -160,7 +167,22 @@ object VeinMiningHUD {
             var y = marginY + 45 // list height + font height
             for ((notice, alpha) in getActiveNotices()) {
                 val color = (alpha * 255).toInt() shl 24 or 0xFFFFFF
-                drawStringWithMargin(notice.text, marginX, y, color)
+                val text = when(VeinMiningNoticeType.fromId(notice.noticeType)) {
+                    VeinMiningNoticeType.TASK_STARTING -> I18n.format("bandit.message.task-starting")
+                    VeinMiningNoticeType.TASK_HALT_HINT -> I18n.format("bandit.message.task-halt-hint")
+                    VeinMiningNoticeType.TASK_STOP_KEY_RELEASE -> I18n.format("bandit.message.task-stop.key-release")
+                    VeinMiningNoticeType.TASK_DONE -> {
+                        val statBlocksMined = notice.extraData["statBlocksMined"] ?: 0
+                        val statItemDropped = notice.extraData["statItemDropped"] ?: 0
+                        I18n.format(
+                            "bandit.message.task-done",
+                            statBlocksMined,
+                            statItemDropped
+                        )
+                    }
+                    null -> ""
+                }
+                drawStringWithMargin(text, marginX, y, color)
                 y += 9 // font height
             }
 
