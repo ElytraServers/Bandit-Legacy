@@ -1,6 +1,7 @@
 package cn.elytra.mod.bandit.common.player_data
 
 import cn.elytra.mod.bandit.BanditMod
+import cn.elytra.mod.bandit.client.VeinMiningHUD
 import cn.elytra.mod.bandit.common.BanditCoroutines
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext.DropPosition
@@ -22,11 +23,11 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import net.minecraft.block.Block
+import net.minecraft.client.resources.I18n
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.server.MinecraftServer
-import net.minecraft.util.ChatComponentTranslation
 import net.minecraft.util.MovingObjectPosition
 import java.util.*
 import kotlin.coroutines.cancellation.CancellationException
@@ -297,8 +298,9 @@ data class VeinMiningPlayerData(
 
         BanditMod.logger.info("Executing Vein Mining #${executionId}")
         BanditMod.logger.debug("Executing Vein Mining #${executionId} at (${pos.x}, ${pos.y}, ${pos.z} @ ${world.provider.dimensionId}) ref ${blockAndMeta.first.unlocalizedName} @ ${blockAndMeta.second} te ${blockTileEntity?.toString() ?: "null"}")
-        player.addChatMessage(ChatComponentTranslation("bandit.message.task-starting"))
-        player.addChatMessage(ChatComponentTranslation("bandit.message.task-halt-hint"))
+        val notices = mutableListOf<Long>()
+        notices.add(VeinMiningHUD.pushNotice(I18n.format("bandit.message.task-starting")))
+        notices.add(VeinMiningHUD.pushNotice(I18n.format("bandit.message.task-halt-hint")))
 
         val job = BanditCoroutines.VeinMiningScope.launch(start = CoroutineStart.LAZY) {
             world.playSoundEffect(player.posX, player.posY, player.posZ, "note.harp", 3.0F, 1.0F)
@@ -309,19 +311,20 @@ data class VeinMiningPlayerData(
             if(it != null) {
                 when(it) {
                     is KeyReleaseCancellation -> {
-                        getPlayer().addChatMessage(ChatComponentTranslation("bandit.message.task-stop.key-release"))
+                        notices.add(VeinMiningHUD.pushNotice(I18n.format("bandit.message.task-stop.key-release")))
                     }
 
                     else -> BanditMod.logger.warn("Job was cancelled because of an throwable", it)
                 }
             }
-            player.addChatMessage(
-                ChatComponentTranslation(
+            notices.add(VeinMiningHUD.pushNotice(I18n.format(
                     "bandit.message.task-done",
                     context.statBlocksMined.get(),
-                    context.statItemDropped.values.sum()
-                )
-            )
+                    context.statItemDropped.values.sum())))
+            for (notice in notices) {
+                VeinMiningHUD.endNotice(notice, fadeDelay = 40)
+            }
+
             // play sound effects
             world.playSoundEffect(player.posX, player.posY, player.posZ, "note.harp", 3.0F, 3.5F)
             // clear caches

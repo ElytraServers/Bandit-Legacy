@@ -24,6 +24,16 @@ object VeinMiningHUD {
     private val executors: CircleList<Pair<Int, VeinMiningExecutorGenerator>> = ExecutorGeneratorCircleList
     private val blockFilters: CircleList<Pair<Int, VeinMiningBlockFilter>> = BlockFilterCircleList
 
+    data class HudNotice(
+        val id: Long,             // 唯一 ID
+        val text: String,
+        var startTick: Long,
+        var fadeDelay: Int = 0,   // 延迟渐隐 tick
+        var fadeTicks: Int = 20,  // 渐隐时长
+        var isEnded: Boolean = false
+    )
+    private val notices = mutableListOf<HudNotice>()
+
     /**
      * Reference to the active menu, used to either show the menu and handle the mouse scroll inputs.
      */
@@ -73,6 +83,75 @@ object VeinMiningHUD {
                 drawStringWithMargin(I18n.format("bandit.message.precalculated", it.size), marginX, y)
             }
             // y += 9 // font height
+
+            glEnable(GL_RESCALE_NORMAL)
+        }
+    }
+
+    fun pushNotice(text: String): Long {
+        val id = System.nanoTime()
+        notices += HudNotice(
+            id = id,
+            text = text,
+            startTick = Minecraft.getMinecraft().theWorld.totalWorldTime,
+            fadeDelay = 0,
+            fadeTicks = 20,
+            isEnded = false
+        )
+        VeinMiningHandlerClient.noticeActive = true
+        return id
+    }
+
+    fun endNotice(id: Long, fadeDelay: Int = 30) {
+        val now = Minecraft.getMinecraft().theWorld.totalWorldTime
+        notices.find { it.id == id && !it.isEnded }?.apply {
+            isEnded = true
+            startTick = now
+            this.fadeDelay = fadeDelay
+        }
+    }
+
+    private fun getActiveNotices(): List<Pair<HudNotice, Float>> {
+        val now = Minecraft.getMinecraft().theWorld.totalWorldTime
+        val iter = notices.iterator()
+        val result = mutableListOf<Pair<HudNotice, Float>>()
+
+        while (iter.hasNext()) {
+            val n = iter.next()
+            val age = (now - n.startTick).toInt()
+
+            val alpha = when {
+                !n.isEnded -> 1f
+                age <= n.fadeDelay -> 1f
+                age <= n.fadeDelay + n.fadeTicks -> 1f - (age - n.fadeDelay) / n.fadeTicks.toFloat()
+                else -> {
+                    iter.remove()
+                    continue
+                }
+            }
+
+            result += n to alpha
+        }
+
+        if (result.isEmpty()) VeinMiningHandlerClient.noticeActive = false
+
+        return result
+    }
+
+    internal fun renderNotice() {
+        val mc = Minecraft.getMinecraft()
+        if(mc.currentScreen == null && mc.theWorld != null) {
+            glDisable(GL_RESCALE_NORMAL)
+            glDisable(GL_LIGHTING)
+
+            glDisable(GL_DEPTH_TEST)
+
+            var y = marginY + 45 // list height + font height
+            for ((notice, alpha) in getActiveNotices()) {
+                val color = (alpha * 255).toInt() shl 24 or 0xFFFFFF
+                drawStringWithMargin(notice.text, marginX, y, color)
+                y += 9 // font height
+            }
 
             glEnable(GL_RESCALE_NORMAL)
         }

@@ -42,12 +42,9 @@ object BanditCommand : CommandBase() {
                     args,
                     *listOf(
                         "help",
-                        "executor",
                         "executor-generator",
-                        "filter",
                         "block-filter",
                         "stop",
-                        "halt",
                         "drop_pos",
                         "drop_timing",
                         "stop_on_release"
