@@ -51,5 +51,5 @@ bandit.drop_timing.immediately=开采时掉落
 bandit.drop_timing.item_immediately=物品开采时掉落，经验球在连锁完成合并后掉落
 bandit.drop_timing.eventually=在连锁完成合并后掉落
 
-keybinding.bandit.category=Bandit Vein Mining
-keybinding.bandit.trigger=连锁挖掘键
+keybinding.bandit.category=Bandit 连锁挖掘
+keybinding.bandit.trigger=连锁挖掘

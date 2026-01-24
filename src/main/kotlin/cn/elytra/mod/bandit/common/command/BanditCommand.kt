@@ -35,6 +35,28 @@ object BanditCommand : CommandBase() {
         }
     }
 
+    override fun addTabCompletionOptions(sender: ICommandSender?, args: Array<out String?>?): List<String?>? {
+        val list = args?.toMutableList()
+        if (list != null && list.size == 1) {
+            return getListOfStringsMatchingLastWord(
+                    args,
+                    *listOf(
+                        "help",
+                        "executor",
+                        "executor-generator",
+                        "filter",
+                        "block-filter",
+                        "stop",
+                        "halt",
+                        "drop_pos",
+                        "drop_timing",
+                        "stop_on_release"
+                    ).toTypedArray()
+                )
+        }
+        return super.addTabCompletionOptions(sender, args)
+    }
+
     private fun ICommandSender.withEntityPlayer(block: (EntityPlayerMP) -> Unit) {
         if(this is EntityPlayerMP) {
             block(this)
