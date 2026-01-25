@@ -38,10 +38,12 @@ object BanditCommand : CommandBase() {
 
     override fun addTabCompletionOptions(sender: ICommandSender?, args: Array<out String?>?): List<String?>? {
         if (args.isNullOrEmpty()) return super.addTabCompletionOptions(sender, args)
-        return when (args.size) {
 
+        val argsList = args.toMutableList()
+
+        return when (val arg0 = argsList.removeFirstOrNull()) {
             // ===== /bandit <here> =====
-            1 -> getListOfStringsMatchingLastWord(
+            null, "" -> getListOfStringsMatchingLastWord(
                 args,
                 "stop",
                 "help",
@@ -49,31 +51,42 @@ object BanditCommand : CommandBase() {
                 "drop_timing",
                 "stop_on_release",
                 "block-filter",
-                "executor-generator",
+                "executor-generator"
             )
 
             // ===== /bandit <sub> <here> =====
-            2 -> when (args[0]) {
-                "executor-generator", "executor" -> listOf("[Leave it blank to view the prompt]")
-                "block-filter", "filter" -> listOf("[Leave it blank to view the prompt]")
-                "drop_pos" ->
+            "executor-generator", "executor" -> {
+                    listOf("[Leave it blank to view the prompt]")
+            }
+
+            "block-filter", "filter" -> {
+                    listOf("[Leave it blank to view the prompt]")
+            }
+
+            "drop_pos" -> {
                     getListOfStringsMatchingLastWord(
                         args,
                         *getValidEnumValues<DropPosition>().toTypedArray()
                     )
-                "drop_timing" ->
+            }
+
+            "drop_timing" -> {
                     getListOfStringsMatchingLastWord(
                         args,
                         *getValidEnumValues<DropTiming>().toTypedArray()
                     )
-                "stop_on_release" ->
+            }
+
+            "stop_on_release" -> {
                     getListOfStringsMatchingLastWord(
                         args,
                         "true",
                         "false"
                     )
-                else -> super.addTabCompletionOptions(sender, args)
             }
+
+            "stop", "help" -> emptyList()
+
             else -> super.addTabCompletionOptions(sender, args)
         }
     }

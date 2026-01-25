@@ -104,7 +104,7 @@ object VeinMiningHUD {
         }
     }
 
-    fun pushNotice(
+    internal fun pushNotice(
         noticeType: Int,
         id: Long,
         extraData: Map<String, Int> = emptyMap(),
@@ -129,7 +129,7 @@ object VeinMiningHUD {
         return id
     }
 
-    fun endNotice(id: Long, fadeDelay: Int = 0, fadeTicks: Int = 20) {
+    internal fun endNotice(id: Long, fadeDelay: Int = 0, fadeTicks: Int = 20) {
         if (fadeTicks == 0 && fadeDelay == 0) {
             notices.removeIf { it.id == id }
             return

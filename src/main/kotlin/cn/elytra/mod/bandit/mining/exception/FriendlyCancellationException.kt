@@ -19,7 +19,7 @@ class KeyReleaseCancellation : FriendlyCancellationException("Cancelled because 
 /**
  * The exception represents the vein-mining task was cancelled by the player because they typed the command
  */
-class CommandCancellation : FriendlyCancellationException("Cancelled because the stop command")
+class CommandCancellation : FriendlyCancellationException("Cancelled because of the stop command")
 
 /**
  * The exception represents the vein-mining task was cancelled by the player because the player left
