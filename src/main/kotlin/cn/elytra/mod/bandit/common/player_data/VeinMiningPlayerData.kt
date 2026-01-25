@@ -10,8 +10,10 @@ import cn.elytra.mod.bandit.common.mining.VeinMiningHandler
 import cn.elytra.mod.bandit.common.util.parseValueToEnum
 import cn.elytra.mod.bandit.mining.BlockFilterRegistry
 import cn.elytra.mod.bandit.mining.ExecutorGeneratorRegistry
+import cn.elytra.mod.bandit.mining.exception.CommandCancellation
 import cn.elytra.mod.bandit.mining.exception.FriendlyCancellationException
 import cn.elytra.mod.bandit.mining.exception.KeyReleaseCancellation
+import cn.elytra.mod.bandit.mining.exception.PlayerLeftCancellation
 import cn.elytra.mod.bandit.mining.executor.BlockPosCacheableExecutorGenerator
 import cn.elytra.mod.bandit.mining.executor.VeinMiningExecutorGenerator
 import cn.elytra.mod.bandit.mining.filter.VeinMiningBlockFilter
@@ -242,7 +244,7 @@ data class VeinMiningPlayerData(
             BanditMod.logger.info("Cached #${executionId}")
             if(it != null) {
                 when(it) {
-                    is KeyReleaseCancellation -> {
+                    is KeyReleaseCancellation, is CommandCancellation, is PlayerLeftCancellation -> {
                         /* ignored */
                     }
 
@@ -320,10 +322,21 @@ data class VeinMiningPlayerData(
                     )
                 }
 
+                is CommandCancellation -> {
+                    BanditNetwork.pushSimpleNoticeToClient(player.asMP,
+                        noticeType = VeinMiningNoticeType.TASK_STOP_FOR_COMMAND,
+                        fadeDelay = 10,
+                        fadeTicks = 20
+                    )
+                }
+
+                is PlayerLeftCancellation -> {
+                    BanditMod.logger.info("VeinMining #${executionId} has ended because the player left")
+                }
+
                 else -> BanditMod.logger.warn("Job was cancelled because of an throwable", it)
             }
 
-            // 完成：发送任务完成通知，40tick后渐隐，渐隐20tick
             BanditNetwork.pushCompletionNoticeToClient(
                 player.asMP,
                 extraData = mapOf(
@@ -359,8 +372,13 @@ data class VeinMiningPlayerData(
         currentJob?.job?.cancel(cause)
     }
 
-    fun stopAndClear() {
-        stopJob()
+    fun stopAndClear(cause: CancellationException? = null) {
+        if (cause != null) {
+            cancelJob(cause)
+        }
+        else{
+            stopJob()
+        }
         veinMiningKeyPressed = false
         InstanceMap -= this.uuid
     }

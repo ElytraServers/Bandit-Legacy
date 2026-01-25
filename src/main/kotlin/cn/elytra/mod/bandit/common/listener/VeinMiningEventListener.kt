@@ -2,6 +2,7 @@ package cn.elytra.mod.bandit.common.listener
 
 import cn.elytra.mod.bandit.common.player_data.veinMiningData
 import cn.elytra.mod.bandit.mining.HarvestCollector
+import cn.elytra.mod.bandit.mining.exception.PlayerLeftCancellation
 import cn.elytra.mod.bandit.network.BanditNetwork
 import com.gtnewhorizon.gtnhlib.eventbus.EventBusSubscriber
 import cpw.mods.fml.common.eventhandler.SubscribeEvent
@@ -100,7 +101,7 @@ class VeinMiningEventListener {
         @JvmStatic
         @SubscribeEvent
         fun onPlayerLeave(e: PlayerEvent.PlayerLoggedOutEvent) {
-            e.player.veinMiningData.stopAndClear()
+            e.player.veinMiningData.stopAndClear(PlayerLeftCancellation())
         }
     }
 }

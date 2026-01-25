@@ -6,6 +6,7 @@ import cn.elytra.mod.bandit.common.player_data.veinMiningData
 import cn.elytra.mod.bandit.common.util.parseValueToEnum
 import cn.elytra.mod.bandit.mining.BlockFilterRegistry
 import cn.elytra.mod.bandit.mining.ExecutorGeneratorRegistry
+import cn.elytra.mod.bandit.mining.exception.CommandCancellation
 import net.minecraft.command.CommandBase
 import net.minecraft.command.ICommandSender
 import net.minecraft.entity.player.EntityPlayerMP
@@ -39,7 +40,7 @@ object BanditCommand : CommandBase() {
         if (args.isNullOrEmpty()) return super.addTabCompletionOptions(sender, args)
         return when (args.size) {
 
-            // ===== 第一级：/bandit <这里> =====
+            // ===== /bandit <here> =====
             1 -> getListOfStringsMatchingLastWord(
                 args,
                 "stop",
@@ -51,7 +52,7 @@ object BanditCommand : CommandBase() {
                 "executor-generator",
             )
 
-            // ===== 第二级：/bandit <sub> <这里> =====
+            // ===== /bandit <sub> <here> =====
             2 -> when (args[0]) {
                 "executor-generator", "executor" -> listOf("[Leave it blank to view the prompt]")
                 "block-filter", "filter" -> listOf("[Leave it blank to view the prompt]")
@@ -160,7 +161,7 @@ object BanditCommand : CommandBase() {
 
     private fun handleHaltRequest(sender: ICommandSender) {
         sender.withEntityPlayer { p ->
-            p.veinMiningData.stopJob("stop command")
+            p.veinMiningData.cancelJob(CommandCancellation())
         }
     }
 

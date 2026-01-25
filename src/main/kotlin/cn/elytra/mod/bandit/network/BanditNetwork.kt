@@ -76,11 +76,28 @@ object BanditNetwork {
     }
 
     /**
-     * 发送简单通知
-     * 用于：任务开始、提示可以停止、按键释放停止
-     * 返回 noticeId，用于后续调用 endNoticeToClient 来停止渲染
+     * Sends a simple notification to the client.
+     *
+     * Used for: task starting, stop hint, and key-release stop notifications.
+     * If fadeTicks or fadeDelay have not 0 value, this notification automatically fades out
+     *  and does not require manual termination.
+     * Otherwise, notifications require manual termination via [endNoticeToClient].
+     *
+     * @param p The target player to receive the notification.
+     * @param noticeType The type of notification to display.
+     * @param fadeDelay Ticks to wait before starting fade-out animation (0 for immediate fade).
+     * @param fadeTicks Duration of fade-out animation in ticks.
+     * @return Unique notice ID that can be used to terminate this notification later.
+     *
+     * @see endNoticeToClient for terminating notifications.
+     * @see VeinMiningNoticeType for available notification types.
      */
-    fun pushSimpleNoticeToClient(p: EntityPlayerMP, noticeType: VeinMiningNoticeType, fadeDelay: Int = 0, fadeTicks: Int = 0): Long {
+    fun pushSimpleNoticeToClient(
+        p: EntityPlayerMP,
+        noticeType: VeinMiningNoticeType,
+        fadeDelay: Int = 0,
+        fadeTicks: Int = 0
+    ): Long {
         val noticeId = System.nanoTime()
         networkW.sendTo(
             S2CNoticePacket().apply {
@@ -97,16 +114,26 @@ object BanditNetwork {
     }
 
     /**
-     * 发送任务完成通知
-     * 用于：任务完成
-     * 此通知会自动渐隐消失，不需要额外调用清除方法
+     * Sends a task completion notification to the client.
+     *
+     * Used for: task completion with statistical data.
+     * If fadeTicks or fadeDelay have not 0 value, this notification automatically fades out
+     *  and does not require manual termination.
+     * Otherwise, notifications require manual termination via [endNoticeToClient].
+     *
+     * @param p The target player to receive the notification.
+     * @param extraData Statistical data to display with the completion notification.
+     *                  Contains metrics like blocks mined, experience gained, etc.
+     * @param fadeDelay Ticks to wait before starting fade-out animation.
+     * @param fadeTicks Duration of fade-out animation in ticks.
+     * @return Unique notice ID (primarily for logging/tracking purposes).
      */
     fun pushCompletionNoticeToClient(
         p: EntityPlayerMP,
         extraData: Map<String, Int>,
         fadeDelay: Int = 40,
         fadeTicks: Int = 20
-    ) : Long{
+    ): Long {
         val noticeId = System.nanoTime()
         networkW.sendTo(
             S2CNoticePacket().apply {
@@ -122,7 +149,25 @@ object BanditNetwork {
         return noticeId
     }
 
-    fun endNoticeToClient(p: EntityPlayerMP, noticeId: Long, fadeDelay: Int = 0, fadeTicks: Int = 0) {
+    /**
+     * Terminates a previously sent notification on the client.
+     *
+     * This method stops the rendering of an ongoing notification with a fade-out animation.
+     * Should be called for notifications created with [pushSimpleNoticeToClient].
+     *
+     * @param p The target player whose notification should be terminated.
+     * @param noticeId The unique ID of the notification to terminate.
+     * @param fadeDelay Ticks to wait before starting the termination fade-out.
+     * @param fadeTicks Duration of termination fade-out animation in ticks.
+     *
+     * @throws NoSuchElementException if no notification with the given ID exists (handled client-side).
+     */
+    fun endNoticeToClient(
+        p: EntityPlayerMP,
+        noticeId: Long,
+        fadeDelay: Int = 0,
+        fadeTicks: Int = 0
+    ) {
         networkW.sendTo(
             S2CNoticePacket().apply {
                 action = S2CNoticePacket.NoticeAction.END

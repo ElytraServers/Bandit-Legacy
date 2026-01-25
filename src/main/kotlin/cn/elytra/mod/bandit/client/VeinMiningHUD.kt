@@ -25,13 +25,27 @@ object VeinMiningHUD {
     private val executors: CircleList<Pair<Int, VeinMiningExecutorGenerator>> = ExecutorGeneratorCircleList
     private val blockFilters: CircleList<Pair<Int, VeinMiningBlockFilter>> = BlockFilterCircleList
 
+    /**
+     * Represents a HUD (Heads-Up Display) notification message.
+     *
+     * HUD notices are time-based display elements that can fade in/out and contain
+     * various types of game notifications.
+     *
+     * @property id Unique identifier for tracking and stopping specific notices.
+     * @property noticeType Type of notice. Use predefined constants for specific notice types by [VeinMiningNoticeType].
+     * @property startTick The fade-out animation start tick.
+     * @property fadeDelay Number of ticks to wait before starting the fade-out animation.
+     * @property fadeTicks Duration (in ticks) of the fade-out animation.
+     * @property extraData Additional structured data for notice-specific information.
+     * @property isEnded Flag indicating whether this notice is about to end.
+     */
     data class HudNotice(
-        val id: Long,             // 唯一 ID
+        val id: Long,
         var noticeType: Int = 0,
         var startTick: Long,
-        var fadeDelay: Int = 0,   // 延迟渐隐 tick
-        var fadeTicks: Int = 20,  // 渐隐时长
-        var extraData: Map<String, Int> = emptyMap(),  // 额外数据
+        var fadeDelay: Int = 0,
+        var fadeTicks: Int = 20,
+        var extraData: Map<String, Int> = emptyMap(),
         var isEnded: Boolean = false
     )
     private val notices = mutableListOf<HudNotice>()
@@ -171,6 +185,7 @@ object VeinMiningHUD {
                     VeinMiningNoticeType.TASK_STARTING -> I18n.format("bandit.message.task-starting")
                     VeinMiningNoticeType.TASK_HALT_HINT -> I18n.format("bandit.message.task-halt-hint")
                     VeinMiningNoticeType.TASK_STOP_KEY_RELEASE -> I18n.format("bandit.message.task-stop.key-release")
+                    VeinMiningNoticeType.TASK_STOP_FOR_COMMAND -> I18n.format("bandit.message.task-stop.for-command")
                     VeinMiningNoticeType.TASK_DONE -> {
                         val statBlocksMined = notice.extraData["statBlocksMined"] ?: 0
                         val statItemDropped = notice.extraData["statItemDropped"] ?: 0

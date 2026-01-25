@@ -16,7 +16,7 @@ class S2CNoticePacket : IMessage {
     var action: NoticeAction = NoticeAction.PUSH
     var noticeId: Long = 0
     var noticeType: Int = 0
-    var extraData: Map<String, Int> = emptyMap()  // 额外数据，键值对形式
+    var extraData: Map<String, Int> = emptyMap()
     var fadeDelay: Int = 0
     var fadeTicks: Int = 20
 
@@ -25,7 +25,6 @@ class S2CNoticePacket : IMessage {
         noticeId = buf.readLong()
         noticeType = buf.readInt()
 
-        // 读取额外数据
         val extraDataSize = buf.readInt()
         extraData = if (extraDataSize > 0) {
             buildMap {
@@ -51,7 +50,6 @@ class S2CNoticePacket : IMessage {
         buf.writeLong(noticeId)
         buf.writeInt(noticeType)
 
-        // 写入额外数据
         buf.writeInt(extraData.size)
         if (extraData.isNotEmpty()) {
             extraData.forEach { (key, value) ->
