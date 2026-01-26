@@ -12,6 +12,7 @@ bandit.message.task-starting=§a开始连锁挖掘任务
 bandit.message.task-halt-hint=§a你可以输入 §6/bandit stop §a来停止正在执行的任务
 bandit.message.task-done=§a连锁挖掘完成! §7连锁了 %s §7个方块, 获得 %s §7个掉落物.
 bandit.message.task-stop.key-release=§a按键已释放，连锁挖掘已停止.
+bandit.message.task-stop.for-command=§a指令已生效，连锁挖掘已停止.
 
 bandit.message.sync-from-server=§7更新设置至 %s §7和 %s
 
@@ -51,5 +52,5 @@ bandit.drop_timing.immediately=开采时掉落
 bandit.drop_timing.item_immediately=物品开采时掉落，经验球在连锁完成合并后掉落
 bandit.drop_timing.eventually=在连锁完成合并后掉落
 
-keybinding.bandit.category=Bandit Vein Mining
-keybinding.bandit.trigger=连锁挖掘触发器
+keybinding.bandit.category=Bandit 连锁挖掘
+keybinding.bandit.trigger=连锁挖掘

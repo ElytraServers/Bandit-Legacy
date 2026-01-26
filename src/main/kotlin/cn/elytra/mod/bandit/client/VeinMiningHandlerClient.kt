@@ -43,6 +43,7 @@ object VeinMiningHandlerClient {
     var veinMiningBlockFilterId = 0
 
     var keyPressed = false
+    var noticeActive = false
 
     val statusKey =
         KeyBinding("keybinding.bandit.trigger", Keyboard.KEY_NONE, "keybinding.bandit.category")
@@ -100,6 +101,9 @@ object VeinMiningHandlerClient {
         if(e.phase != TickEvent.Phase.END) return
         if(keyPressed) {
             VeinMiningHUD.render()
+        }
+        if(noticeActive) {
+            VeinMiningHUD.renderNotice()
         }
     }
 

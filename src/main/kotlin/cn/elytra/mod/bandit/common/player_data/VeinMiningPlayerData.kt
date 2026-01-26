@@ -10,8 +10,10 @@ import cn.elytra.mod.bandit.common.mining.VeinMiningHandler
 import cn.elytra.mod.bandit.common.util.parseValueToEnum
 import cn.elytra.mod.bandit.mining.BlockFilterRegistry
 import cn.elytra.mod.bandit.mining.ExecutorGeneratorRegistry
+import cn.elytra.mod.bandit.mining.exception.CommandCancellation
 import cn.elytra.mod.bandit.mining.exception.FriendlyCancellationException
 import cn.elytra.mod.bandit.mining.exception.KeyReleaseCancellation
+import cn.elytra.mod.bandit.mining.exception.PlayerLeftCancellation
 import cn.elytra.mod.bandit.mining.executor.BlockPosCacheableExecutorGenerator
 import cn.elytra.mod.bandit.mining.executor.VeinMiningExecutorGenerator
 import cn.elytra.mod.bandit.mining.filter.VeinMiningBlockFilter
@@ -26,7 +28,6 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.player.EntityPlayerMP
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.server.MinecraftServer
-import net.minecraft.util.ChatComponentTranslation
 import net.minecraft.util.MovingObjectPosition
 import java.util.*
 import kotlin.coroutines.cancellation.CancellationException
@@ -243,7 +244,7 @@ data class VeinMiningPlayerData(
             BanditMod.logger.info("Cached #${executionId}")
             if(it != null) {
                 when(it) {
-                    is KeyReleaseCancellation -> {
+                    is KeyReleaseCancellation, is CommandCancellation, is PlayerLeftCancellation -> {
                         /* ignored */
                     }
 
@@ -297,8 +298,9 @@ data class VeinMiningPlayerData(
 
         BanditMod.logger.info("Executing Vein Mining #${executionId}")
         BanditMod.logger.debug("Executing Vein Mining #${executionId} at (${pos.x}, ${pos.y}, ${pos.z} @ ${world.provider.dimensionId}) ref ${blockAndMeta.first.unlocalizedName} @ ${blockAndMeta.second} te ${blockTileEntity?.toString() ?: "null"}")
-        player.addChatMessage(ChatComponentTranslation("bandit.message.task-starting"))
-        player.addChatMessage(ChatComponentTranslation("bandit.message.task-halt-hint"))
+        val notices = mutableListOf<Long>()
+        notices.add(BanditNetwork.pushSimpleNoticeToClient(player.asMP, VeinMiningNoticeType.TASK_STARTING))
+        notices.add(BanditNetwork.pushSimpleNoticeToClient(player.asMP, VeinMiningNoticeType.TASK_HALT_HINT))
 
         val job = BanditCoroutines.VeinMiningScope.launch(start = CoroutineStart.LAZY) {
             world.playSoundEffect(player.posX, player.posY, player.posZ, "note.harp", 3.0F, 1.0F)
@@ -306,22 +308,45 @@ data class VeinMiningPlayerData(
         }
         job.invokeOnCompletion {
             BanditMod.logger.info("VeinMining #${executionId} has ended")
-            if(it != null) {
-                when(it) {
-                    is KeyReleaseCancellation -> {
-                        getPlayer().addChatMessage(ChatComponentTranslation("bandit.message.task-stop.key-release"))
-                    }
 
-                    else -> BanditMod.logger.warn("Job was cancelled because of an throwable", it)
-                }
+            for (noticeId in notices) {
+                BanditNetwork.endNoticeToClient(player.asMP, noticeId, fadeDelay = 0, fadeTicks = 0)
             }
-            player.addChatMessage(
-                ChatComponentTranslation(
-                    "bandit.message.task-done",
-                    context.statBlocksMined.get(),
-                    context.statItemDropped.values.sum()
-                )
+
+            when(it) {
+                is KeyReleaseCancellation -> {
+                    BanditNetwork.pushSimpleNoticeToClient(player.asMP,
+                        noticeType = VeinMiningNoticeType.TASK_STOP_KEY_RELEASE,
+                        fadeDelay = 10,
+                        fadeTicks = 20
+                    )
+                }
+
+                is CommandCancellation -> {
+                    BanditNetwork.pushSimpleNoticeToClient(player.asMP,
+                        noticeType = VeinMiningNoticeType.TASK_STOP_FOR_COMMAND,
+                        fadeDelay = 10,
+                        fadeTicks = 20
+                    )
+                }
+
+                is PlayerLeftCancellation -> {
+                    BanditMod.logger.info("VeinMining #${executionId} has ended because the player left")
+                }
+
+                else -> BanditMod.logger.warn("Job was cancelled because of an throwable", it)
+            }
+
+            BanditNetwork.pushCompletionNoticeToClient(
+                player.asMP,
+                extraData = mapOf(
+                    "statBlocksMined" to context.statBlocksMined.get(),
+                    "statItemDropped" to context.statItemDropped.values.sum()
+                ),
+                fadeDelay = 40,
+                fadeTicks = 20
             )
+
             // play sound effects
             world.playSoundEffect(player.posX, player.posY, player.posZ, "note.harp", 3.0F, 3.5F)
             // clear caches
@@ -347,8 +372,13 @@ data class VeinMiningPlayerData(
         currentJob?.job?.cancel(cause)
     }
 
-    fun stopAndClear() {
-        stopJob()
+    fun stopAndClear(cause: CancellationException? = null) {
+        if (cause != null) {
+            cancelJob(cause)
+        }
+        else{
+            stopJob()
+        }
         veinMiningKeyPressed = false
         InstanceMap -= this.uuid
     }

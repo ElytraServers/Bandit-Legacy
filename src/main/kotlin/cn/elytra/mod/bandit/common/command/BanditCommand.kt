@@ -6,6 +6,7 @@ import cn.elytra.mod.bandit.common.player_data.veinMiningData
 import cn.elytra.mod.bandit.common.util.parseValueToEnum
 import cn.elytra.mod.bandit.mining.BlockFilterRegistry
 import cn.elytra.mod.bandit.mining.ExecutorGeneratorRegistry
+import cn.elytra.mod.bandit.mining.exception.CommandCancellation
 import net.minecraft.command.CommandBase
 import net.minecraft.command.ICommandSender
 import net.minecraft.entity.player.EntityPlayerMP
@@ -32,6 +33,56 @@ object BanditCommand : CommandBase() {
             "drop_timing" -> handleDropTiming(sender, args)
             "stop_on_release" -> handleStopOnRelease(sender, args)
             else -> handleHelp(sender)
+        }
+    }
+
+    override fun addTabCompletionOptions(sender: ICommandSender, args: Array<String>): List<String>? {
+        if (args.isEmpty()) return super.addTabCompletionOptions(sender, args)
+
+        val argsList = args.toMutableList()
+
+        return when (argsList.removeFirstOrNull()) {
+            null, "" -> getListOfStringsMatchingLastWord(
+                args,
+                "stop",
+                "help",
+                "drop_pos",
+                "drop_timing",
+                "stop_on_release",
+                "block-filter",
+                "executor-generator"
+            )
+
+            "executor-generator", "executor", "block-filter", "filter" -> {
+                    // TODO: add support to names and update this completion
+                    emptyList()
+            }
+
+            "drop_pos" -> {
+                    getListOfStringsMatchingLastWord(
+                        args,
+                        *getValidEnumValues<DropPosition>().toTypedArray()
+                    )
+            }
+
+            "drop_timing" -> {
+                    getListOfStringsMatchingLastWord(
+                        args,
+                        *getValidEnumValues<DropTiming>().toTypedArray()
+                    )
+            }
+
+            "stop_on_release" -> {
+                    getListOfStringsMatchingLastWord(
+                        args,
+                        "true",
+                        "false"
+                    )
+            }
+
+            "stop", "help" -> emptyList()
+
+            else -> super.addTabCompletionOptions(sender, args)
         }
     }
 
@@ -118,7 +169,7 @@ object BanditCommand : CommandBase() {
 
     private fun handleHaltRequest(sender: ICommandSender) {
         sender.withEntityPlayer { p ->
-            p.veinMiningData.stopJob("stop command")
+            p.veinMiningData.cancelJob(CommandCancellation())
         }
     }
 

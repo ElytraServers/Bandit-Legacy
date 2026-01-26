@@ -12,6 +12,7 @@ bandit.message.task-starting=§aStarting Vein Mining task
 bandit.message.task-halt-hint=§aYou can type §6/bandit stop §ato halt a ongoing task
 bandit.message.task-done=§aVein Mining done! §7Harvested %s §7blocks, and dropped %s §7items.
 bandit.message.task-stop.key-release=§aVein Mining stopped because the key was released.
+bandit.message.task-stop.for-command=§aVein Mining stopped because the command.
 
 bandit.message.sync-from-server=§7Updated your settings to %s §7and %s
 

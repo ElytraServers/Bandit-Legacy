@@ -15,3 +15,13 @@ sealed class FriendlyCancellationException : CancellationException {
  * The exception represents the vein-mining task was cancelled by the player because they released the key while the task is executing.
  */
 class KeyReleaseCancellation : FriendlyCancellationException("Cancelled because the vein-mining key was released")
+
+/**
+ * The exception represents the vein-mining task was cancelled by the player because they typed the command
+ */
+class CommandCancellation : FriendlyCancellationException("Cancelled because of the stop command")
+
+/**
+ * The exception represents the vein-mining task was cancelled by the player because the player left
+ */
+class PlayerLeftCancellation : FriendlyCancellationException("Cancelled because the player left")

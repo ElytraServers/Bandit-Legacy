@@ -5,7 +5,9 @@ import cn.elytra.mod.bandit.common.mining.VeinMiningContext
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.flowOn
+import kotlin.math.max
+import kotlin.math.min
 
 class LargeScanExecutorGenerator(
     private val radiusXZ: Int,
@@ -22,18 +24,16 @@ class LargeScanExecutorGenerator(
             for (x in x - radiusXZ until x + radiusXZ) {
                 for (z in z - radiusXZ until z + radiusXZ) {
                     // y iteration reversed from up to down
-                    for (y in y + radiusY downTo y - radiusY) {
-                        // FIX: the block can possibly not loaded, causing a CME when not loading it in the server thread.
-                        // this may impact on the performance of executing large-scan.
-                        withContext(BanditCoroutines.ServerThreadDispatcher) {
-                            if (isBlockMatchingVein(context, BlockPos(x, y, z))) {
-                                emit(BlockPos(x, y, z))
-                            }
+                    for (y in max((y + radiusY), 256) downTo min((y - radiusY), 0)) {
+                        if (isBlockMatchingVein(context, BlockPos(x, y, z))) {
+                            emit(BlockPos(x, y, z))
                         }
                     }
                 }
             }
-        }
+        // FIX: the block can possibly not loaded, causing a CME when not loading it in the server thread.
+        // this may impact on the performance of executing large-scan.
+        }.flowOn(BanditCoroutines.ServerThreadDispatcher)
 
     override fun getUnlocalizedName(): String = "bandit.executor.large-scan"
 }
