@@ -71,7 +71,7 @@ class S2CNoticePacket : IMessage {
         ): IMessage? {
             when (message.action) {
                 NoticeAction.PUSH -> {
-                    VeinMiningHUD.pushNotice(
+                    VeinMiningHUD.postNotice(
                         message.noticeType,
                         message.noticeId,
                         message.extraData,
@@ -80,7 +80,7 @@ class S2CNoticePacket : IMessage {
                     )
                 }
                 NoticeAction.END -> {
-                    VeinMiningHUD.endNotice(
+                    VeinMiningHUD.cancelNotice(
                         message.noticeId,
                         message.fadeDelay,
                         message.fadeTicks
