@@ -36,13 +36,12 @@ object BanditCommand : CommandBase() {
         }
     }
 
-    override fun addTabCompletionOptions(sender: ICommandSender?, args: Array<out String?>?): List<String?>? {
-        if (args.isNullOrEmpty()) return super.addTabCompletionOptions(sender, args)
+    override fun addTabCompletionOptions(sender: ICommandSender, args: Array<String>): List<String>? {
+        if (args.isEmpty()) return super.addTabCompletionOptions(sender, args)
 
         val argsList = args.toMutableList()
 
-        return when (val arg0 = argsList.removeFirstOrNull()) {
-            // ===== /bandit <here> =====
+        return when (argsList.removeFirstOrNull()) {
             null, "" -> getListOfStringsMatchingLastWord(
                 args,
                 "stop",
@@ -54,13 +53,9 @@ object BanditCommand : CommandBase() {
                 "executor-generator"
             )
 
-            // ===== /bandit <sub> <here> =====
-            "executor-generator", "executor" -> {
-                    listOf("[Leave it blank to view the prompt]")
-            }
-
-            "block-filter", "filter" -> {
-                    listOf("[Leave it blank to view the prompt]")
+            "executor-generator", "executor", "block-filter", "filter" -> {
+                    // TODO: add support to names and update this completion
+                    emptyList()
             }
 
             "drop_pos" -> {
