@@ -182,6 +182,7 @@ object VeinMiningHUD {
             for ((notice, alpha) in getActiveNotices()) {
                 val color = (alpha * 255).toInt() shl 24 or 0xFFFFFF
                 val text = when(VeinMiningNoticeType.fromId(notice.noticeType)) {
+                    VeinMiningNoticeType.TASK_BLOCKED -> I18n.format("bandit.message.task-blocked")
                     VeinMiningNoticeType.TASK_STARTING -> I18n.format("bandit.message.task-starting")
                     VeinMiningNoticeType.TASK_HALT_HINT -> I18n.format("bandit.message.task-halt-hint")
                     VeinMiningNoticeType.TASK_STOP_KEY_RELEASE -> I18n.format("bandit.message.task-stop.key-release")

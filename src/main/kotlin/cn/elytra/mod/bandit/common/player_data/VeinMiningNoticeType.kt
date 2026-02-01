@@ -35,7 +35,12 @@ enum class VeinMiningNoticeType(val id: Int) {
      * Task completed successfully.
      * Mining chain finished naturally and requires statistical processing.
      */
-    TASK_DONE(5);
+    TASK_DONE(5),
+
+    /**
+     * Task not start cause there is another vein mining job.
+     */
+    TASK_BLOCKED(6);
 
     companion object {
         /**
