@@ -29,4 +29,12 @@ object BlockFilterRegistry {
     }
 
     fun all(): Map<Int, VeinMiningBlockFilter> = blockFilterMap.toMap()
+
+    fun isRegistered(id: Int): Boolean {
+        return id in blockFilterMap
+    }
+
+    fun getUnlocalizedName(id: Int): String? {
+        return blockFilterMap[id]?.getUnlocalizedName()
+    }
 }
