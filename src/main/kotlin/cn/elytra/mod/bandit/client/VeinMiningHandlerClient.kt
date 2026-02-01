@@ -83,13 +83,15 @@ object VeinMiningHandlerClient {
     }
 
     fun onMouseInput(d: Int): Boolean {
-        VeinMiningHUD.withActiveMenu {
-            if(d < 0) {
-                this.move(1)
-                return true
-            } else if(d > 0) {
-                this.move(-1)
-                return true
+        if (Keyboard.isKeyDown(statusKey.keyCode)){
+            VeinMiningHUD.withActiveMenu {
+                if(d < 0) {
+                    this.move(1)
+                    return true
+                } else if(d > 0) {
+                    this.move(-1)
+                    return true
+                }
             }
         }
         return false
