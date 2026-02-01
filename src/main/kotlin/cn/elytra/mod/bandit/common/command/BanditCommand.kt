@@ -19,6 +19,10 @@ object BanditCommand : CommandBase() {
 
     override fun getRequiredPermissionLevel(): Int = 0
 
+    override fun canCommandSenderUseCommand(sender: ICommandSender?): Boolean {
+        return true
+    }
+
     override fun processCommand(
         sender: ICommandSender,
         argsArray: Array<String>,
