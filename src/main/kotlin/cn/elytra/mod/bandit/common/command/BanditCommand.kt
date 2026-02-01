@@ -46,7 +46,7 @@ object BanditCommand : CommandBase() {
         val argsList = args.toMutableList()
 
         return when (argsList.removeFirstOrNull()) {
-            "executor-generator", "executor" -> {
+            "executor-generator ", "executor " -> {
                 getListOfStringsMatchingLastWord(
                     args,
                     *ExecutorGeneratorRegistry.all().map { (id, gen) ->
@@ -55,7 +55,7 @@ object BanditCommand : CommandBase() {
                 )
             }
 
-            "block-filter", "filter" -> {
+            "block-filter ", "filter " -> {
                 getListOfStringsMatchingLastWord(
                     args,
                     *BlockFilterRegistry.all().map { (id, filter) ->
@@ -64,21 +64,21 @@ object BanditCommand : CommandBase() {
                 )
             }
 
-            "drop_pos" -> {
+            "drop_pos " -> {
                 getListOfStringsMatchingLastWord(
                     args,
                     *getValidEnumValues<DropPosition>().toTypedArray()
                 )
             }
 
-            "drop_timing" -> {
+            "drop_timing " -> {
                 getListOfStringsMatchingLastWord(
                     args,
                     *getValidEnumValues<DropTiming>().toTypedArray()
                 )
             }
 
-            "stop_on_release" -> {
+            "stop_on_release " -> {
                 getListOfStringsMatchingLastWord(
                     args,
                     "true",
@@ -86,7 +86,7 @@ object BanditCommand : CommandBase() {
                 )
             }
 
-            "stop", "help" -> emptyList()
+            "stop ", "help " -> emptyList()
 
             else -> {
                 getListOfStringsMatchingLastWord(
