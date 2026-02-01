@@ -351,7 +351,7 @@ data class VeinMiningPlayerData(
                     "statBlocksMined" to context.statBlocksMined.get(),
                     "statItemDropped" to context.statItemDropped.values.sum()
                 ),
-                fadeDelay = 40,
+                fadeDelay = 100,
                 fadeTicks = 20
             )
 
