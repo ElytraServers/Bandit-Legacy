@@ -46,39 +46,39 @@ object BanditCommand : CommandBase() {
         val argsList = args.toMutableList()
 
         return when (argsList.removeFirstOrNull()) {
-            "executor-generator ", "executor " -> {
+            "executor-generator", "executor" -> {
                 getListOfStringsMatchingLastWord(
                     args,
-                    *ExecutorGeneratorRegistry.all().map { (id, gen) ->
-                        "$id:(${gen.getUnlocalizedName().substringAfterLast('.')})"
+                    *ExecutorGeneratorRegistry.all().map { (_, gen) ->
+                        gen.getUnlocalizedName().substringAfterLast('.')
                     }.toTypedArray()
                 )
             }
 
-            "block-filter ", "filter " -> {
+            "block-filter", "filter" -> {
                 getListOfStringsMatchingLastWord(
                     args,
-                    *BlockFilterRegistry.all().map { (id, filter) ->
-                        "$id:(${filter.getUnlocalizedName().substringAfterLast('.')})"
+                    *BlockFilterRegistry.all().map { (_, filter) ->
+                        filter.getUnlocalizedName().substringAfterLast('.')
                     }.toTypedArray()
                 )
             }
 
-            "drop_pos " -> {
+            "drop_pos" -> {
                 getListOfStringsMatchingLastWord(
                     args,
                     *getValidEnumValues<DropPosition>().toTypedArray()
                 )
             }
 
-            "drop_timing " -> {
+            "drop_timing" -> {
                 getListOfStringsMatchingLastWord(
                     args,
                     *getValidEnumValues<DropTiming>().toTypedArray()
                 )
             }
 
-            "stop_on_release " -> {
+            "stop_on_release" -> {
                 getListOfStringsMatchingLastWord(
                     args,
                     "true",
@@ -86,7 +86,7 @@ object BanditCommand : CommandBase() {
                 )
             }
 
-            "stop ", "help " -> emptyList()
+            "stop ", "help" -> emptyList()
 
             else -> {
                 getListOfStringsMatchingLastWord(
@@ -122,7 +122,7 @@ object BanditCommand : CommandBase() {
                 sender.addChatMessage(
                     ChatComponentTranslation(
                         "command.bandit.executor.current",
-                        ChatComponentTranslation("bandit.executor.$execId")
+                        ExecutorGeneratorRegistry.get(execId)?.toChatComponent()
                     )
                 )
                 sender.addChatMessage(ChatComponentTranslation("command.bandit.executor.list"))
@@ -131,20 +131,25 @@ object BanditCommand : CommandBase() {
                         ChatComponentTranslation(
                             "command.bandit.executor.list.entry",
                             id,
-                            ChatComponentTranslation("bandit.executor.$id")
+                            ExecutorGeneratorRegistry.get(id)?.toChatComponent()
                         )
                     )
                 }
             } else {
-                val id = parseInt(sender, raw.substringBefore(":"))
-                if(ExecutorGeneratorRegistry.isRegistered(id)){
-                    p.veinMiningData.veinMiningExecutorId = id
-                    sender.addChatMessage(
-                        ChatComponentTranslation("command.bandit.executor.set.ok",
-                            ChatComponentTranslation(ExecutorGeneratorRegistry.getUnlocalizedName(id)))
-                    )
+                val executorId = ExecutorGeneratorRegistry.resolveExecutorId(raw)
+
+                if (executorId == null) {
+                    sender.addChatMessage(ChatComponentTranslation("command.bandit.executor.set.fail"))
+                    return@withEntityPlayer
                 }
-                else sender.addChatMessage(ChatComponentTranslation("command.bandit.executor.set.fail"))
+
+                p.veinMiningData.veinMiningExecutorId = executorId
+                sender.addChatMessage(
+                    ChatComponentTranslation(
+                        "command.bandit.executor.set.ok",
+                        ExecutorGeneratorRegistry.get(executorId)?.toChatComponent()
+                    )
+                )
             }
         }
     }
@@ -160,7 +165,7 @@ object BanditCommand : CommandBase() {
                 sender.addChatMessage(
                     ChatComponentTranslation(
                         "command.bandit.filter.current",
-                        ChatComponentTranslation("bandit.filter.$filterId")
+                        BlockFilterRegistry.get(filterId)?.toChatComponent()
                     )
                 )
                 sender.addChatMessage(ChatComponentTranslation("command.bandit.filter.list"))
@@ -168,18 +173,26 @@ object BanditCommand : CommandBase() {
                     sender.addChatMessage(
                         ChatComponentTranslation(
                             "command.bandit.filter.list.entry",
-                            ChatComponentTranslation("bandit.filter.$id")
+                            id,
+                            BlockFilterRegistry.get(id)?.toChatComponent()
                         )
                     )
                 }
             } else {
-                val id = parseInt(sender, raw.substringBefore(":"))
-                if (BlockFilterRegistry.isRegistered(id)){
-                    p.veinMiningData.veinMiningBlockFilterId = id
-                    sender.addChatMessage(ChatComponentTranslation("command.bandit.filter.set.ok",
-                        ChatComponentTranslation(BlockFilterRegistry.getUnlocalizedName(id))))
+                val filterId = BlockFilterRegistry.resolveFilterId(raw)
+
+                if (filterId == null) {
+                    sender.addChatMessage(ChatComponentTranslation("command.bandit.filter.set.fail"))
+                    return@withEntityPlayer
                 }
-                else sender.addChatMessage(ChatComponentTranslation("command.bandit.filter.set.fail"))
+
+                p.veinMiningData.veinMiningBlockFilterId = filterId
+                sender.addChatMessage(
+                    ChatComponentTranslation(
+                        "command.bandit.filter.set.ok",
+                        BlockFilterRegistry.get(filterId)?.toChatComponent()
+                    )
+                )
             }
         }
     }
