@@ -40,67 +40,67 @@ object BanditCommand : CommandBase() {
         }
     }
 
-    override fun addTabCompletionOptions(sender: ICommandSender, args: Array<String>): List<String>? {
-        if (args.isEmpty()) return super.addTabCompletionOptions(sender, args)
+    class CommandNode(val name: String) {
+        private val _sub = mutableListOf<CommandNode>()
+        val sub: List<CommandNode> get() = _sub
 
-        val argsList = args.toMutableList()
-
-        return when (argsList.removeFirstOrNull()) {
-            "executor-generator", "executor" -> {
-                getListOfStringsMatchingLastWord(
-                    args,
-                    *ExecutorGeneratorRegistry.all().map { (_, gen) ->
-                        gen.getUnlocalizedName().substringAfterLast('.')
-                    }.toTypedArray()
-                )
+        fun sub(vararg nodesOrNames: Any): CommandNode {
+            nodesOrNames.forEach {
+                when (it) {
+                    is CommandNode -> _sub.add(it)
+                    is String -> _sub.add(CommandNode(it))
+                    is Iterable<*> -> it.forEach { n -> if (n is String) _sub.add(CommandNode(n)) }
+                }
             }
+            return this
+        }
 
-            "block-filter", "filter" -> {
-                getListOfStringsMatchingLastWord(
-                    args,
-                    *BlockFilterRegistry.all().map { (_, filter) ->
-                        filter.getUnlocalizedName().substringAfterLast('.')
-                    }.toTypedArray()
-                )
-            }
+        fun complete(args: List<String>): List<String> {
+            if (args.isEmpty()) return listOf(name)
 
-            "drop_pos" -> {
-                getListOfStringsMatchingLastWord(
-                    args,
-                    *getValidEnumValues<DropPosition>().toTypedArray()
-                )
-            }
+            val head = args.first()
+            val tail = args.drop(1)
 
-            "drop_timing" -> {
-                getListOfStringsMatchingLastWord(
-                    args,
-                    *getValidEnumValues<DropTiming>().toTypedArray()
-                )
-            }
-
-            "stop_on_release" -> {
-                getListOfStringsMatchingLastWord(
-                    args,
-                    "true",
-                    "false"
-                )
-            }
-
-            "stop ", "help" -> emptyList()
-
-            else -> {
-                getListOfStringsMatchingLastWord(
-                    args,
-                    "stop",
-                    "help",
-                    "drop_pos",
-                    "drop_timing",
-                    "stop_on_release",
-                    "block-filter",
-                    "executor-generator"
-                ).takeIf { it.isNotEmpty() } ?: super.addTabCompletionOptions(sender, args)
+            return when {
+                !name.startsWith(head) -> emptyList()
+                tail.isEmpty() -> listOf(name)
+                name == head -> sub.flatMap { it.complete(tail) }
+                else -> emptyList()
             }
         }
+    }
+
+
+    override fun addTabCompletionOptions(sender: ICommandSender, args: Array<String>): List<String> {
+        val commandTree = listOf(
+//            Example:
+//            CommandNode("complex").sub(
+//                CommandNode("subLevel").sub(
+//                        CommandNode("subLevel2a").sub("foo", "bar"),
+//                        CommandNode("subLevel2b").sub(stringListFun()),
+//                        CommandNode("subLevel2c")
+//                ),
+//            ),
+            CommandNode("stop"),
+            CommandNode("help"),
+
+            CommandNode("stop_on_release").sub("true", "false"),
+            CommandNode("drop_pos").sub(getValidEnumValues<DropPosition>()),
+            CommandNode("drop_timing").sub(getValidEnumValues<DropTiming>()),
+
+            CommandNode("executor-generator").sub(
+                ExecutorGeneratorRegistry.all().values.map {
+                    it.getUnlocalizedName().substringAfterLast('.')
+                }
+            ),
+            CommandNode("block-filter").sub(
+                BlockFilterRegistry.all().values.map {
+                    it.getUnlocalizedName().substringAfterLast('.')
+                }
+            )
+        )
+
+        return commandTree.flatMap { it.complete(args.toList()) }
     }
 
     private fun ICommandSender.withEntityPlayer(block: (EntityPlayerMP) -> Unit) {
