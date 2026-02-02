@@ -37,4 +37,16 @@ object BlockFilterRegistry {
     fun getUnlocalizedName(id: Int): String? {
         return blockFilterMap[id]?.getUnlocalizedName()
     }
+
+    fun resolveFilterId(raw: String): Int? {
+        val key = raw.trim().lowercase()
+
+        key.toIntOrNull()?.takeIf(::isRegistered)
+            ?.let { return it }
+
+        return blockFilterMap.entries.firstOrNull { (_, filter) ->
+            val name = filter.getUnlocalizedName().lowercase()
+            name == key || name.substringAfterLast('.') == key
+        }?.key
+    }
 }
