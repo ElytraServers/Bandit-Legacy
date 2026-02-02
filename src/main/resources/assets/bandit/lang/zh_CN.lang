@@ -11,6 +11,7 @@ bandit.block-filter.match-block-and-meta=匹配方块和Meta
 bandit.message.task-starting=§a开始连锁挖掘任务
 bandit.message.task-halt-hint=§a你可以输入 §6/bandit stop §a来停止正在执行的任务
 bandit.message.task-done=§a连锁挖掘完成! §7连锁了 %s §7个方块, 获得 %s §7个掉落物.
+bandit.message.task-stop.tool-max-damage=§a阻止工具损失，连锁挖掘已停止.
 bandit.message.task-stop.key-release=§a按键已释放，连锁挖掘已停止.
 bandit.message.task-stop.for-command=§a指令已生效，连锁挖掘已停止.
 
