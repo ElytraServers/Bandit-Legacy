@@ -61,29 +61,35 @@ object VeinMiningHandlerClient {
         MixinBridger.onMouseScrollCancelable += this::onMouseInput
     }
 
+    private fun isStatusKeyPressed(): Boolean {
+        val code = statusKey.keyCode
+
+        return if (code >= 0) {
+            Keyboard.isKeyDown(code)
+        } else {
+            val button = Mouse.getEventButton()
+            if (button == -1) {
+                keyPressed
+            } else {
+                code + 100 == button && Mouse.getEventButtonState()
+            }
+        }
+    }
+
     @JvmStatic
     @SubscribeEvent
     fun onKeyInput(e: InputEvent.KeyInputEvent) {
         if(Minecraft.getMinecraft().thePlayer == null) return
 
-        val keyPressedNow = if(statusKey.keyCode >= 0) {
-            Keyboard.isKeyDown(statusKey.keyCode)
-        } else {
-            val button = Mouse.getEventButton()
-            if(button == -1) {
-                keyPressed
-            } else {
-                statusKey.keyCode + 100 == button && Mouse.getEventButtonState()
-            }
-        }
-        if(keyPressedNow != keyPressed) {
-            BanditNetwork.syncStatusToServer(keyPressedNow)
-            keyPressed = keyPressedNow
+        val pressedNow = isStatusKeyPressed()
+        if (pressedNow != keyPressed) {
+            BanditNetwork.syncStatusToServer(pressedNow)
+            keyPressed = pressedNow
         }
     }
 
     fun onMouseInput(d: Int): Boolean {
-        if (Keyboard.isKeyDown(statusKey.keyCode)){
+        if (isStatusKeyPressed()){
             VeinMiningHUD.withActiveMenu {
                 if(d < 0) {
                     this.move(1)
