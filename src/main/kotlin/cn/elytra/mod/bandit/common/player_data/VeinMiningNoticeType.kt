@@ -32,15 +32,21 @@ enum class VeinMiningNoticeType(val id: Int) {
     TASK_STOP_FOR_COMMAND(4),
 
     /**
+     * Task stopped because the player failed to destroy the blocks.
+     * Mining chain was terminated via tool is broken or something.
+     */
+    TASK_STOP_BECAUSE_FAIL(5),
+
+    /**
      * Task completed successfully.
      * Mining chain finished naturally and requires statistical processing.
      */
-    TASK_DONE(5),
+    TASK_DONE(6),
 
     /**
      * Task not start cause there is another vein mining job.
      */
-    TASK_BLOCKED(6);
+    TASK_BLOCKED(7);
 
     companion object {
         /**

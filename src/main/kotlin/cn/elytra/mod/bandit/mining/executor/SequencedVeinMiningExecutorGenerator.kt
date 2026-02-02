@@ -4,8 +4,10 @@ import cn.elytra.mod.bandit.BanditMod
 import cn.elytra.mod.bandit.common.BanditCoroutines
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext
 import cn.elytra.mod.bandit.common.mining.VeinMiningContext.DropPosition
+import cn.elytra.mod.bandit.common.player_data.veinMiningData
 import cn.elytra.mod.bandit.mining.HarvestCollector
 import cn.elytra.mod.bandit.mining.event.VeinMiningEvent
+import cn.elytra.mod.bandit.mining.exception.DestroyBlockFail
 import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -38,12 +40,25 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
         return event.isBlockMatching
     }
 
+    protected open fun equippedToolWithMaxDamage(context: VeinMiningContext): Boolean {
+        val equippedItem: ItemStack? = context.getPlayer().currentEquippedItem
+        if (equippedItem != null && equippedItem.isItemStackDamageable) {
+            return (equippedItem.maxDamage - equippedItem.itemDamage < 1)
+        }
+        return false
+    }
+
     /**
      * Execute the actual block harvesting, the item dropping, and other things that not related to
      * iterating but to the certain "single" block. This function is called in Server Thread, so it is
      * safe to do anything!
      */
     protected open fun doBlockHarvestOn(context: VeinMiningContext, pos: BlockPos) {
+        if (equippedToolWithMaxDamage(context)) {
+            context.getPlayer().veinMiningData.cancelJob(DestroyBlockFail())
+            return
+        }
+
         val (drops, xpValue) = HarvestCollector.withHarvestCollectorScope {
             context.getPlayer().theItemInWorldManager.tryHarvestBlock(pos.x, pos.y, pos.z)
         }
