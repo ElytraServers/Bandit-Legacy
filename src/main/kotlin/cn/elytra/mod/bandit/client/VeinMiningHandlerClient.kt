@@ -3,7 +3,6 @@ package cn.elytra.mod.bandit.client
 import cn.elytra.mod.bandit.BanditMod
 import cn.elytra.mod.bandit.MixinBridger
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.keyPressed
-import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.onMouseInput
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.veinMiningBlockFilterId
 import cn.elytra.mod.bandit.client.VeinMiningHandlerClient.veinMiningExecutorId
 import cn.elytra.mod.bandit.network.BanditNetwork
@@ -30,7 +29,7 @@ import org.lwjgl.input.Mouse
  * [keyPressed] stores the status of the trigger key in the last tick. If the value is changed at this tick, it will be
  * sync-ed to server.
  *
- * [onMouseInput] handles the mouse wheel operations, passing the data to [VeinMiningHUD] for the executor/filter selecting.
+ * [onMouseScrollCancelable] handles the mouse wheel operations, passing the data to [VeinMiningHUD] for the executor/filter selecting.
  *
  * @see VeinMiningHUD
  * @see cn.elytra.mod.bandit.common.mining.VeinMiningHandler
@@ -58,38 +57,42 @@ object VeinMiningHandlerClient {
 
     init {
         // register the callback
-        MixinBridger.onMouseScrollCancelable += this::onMouseInput
+        MixinBridger.onMouseScrollCancelable += this::onMouseScrollCancelable
+    }
+
+    private fun syncIfChanged(pressedNow: Boolean) {
+        if (pressedNow == keyPressed) return
+        BanditNetwork.syncStatusToServer(pressedNow)
+        keyPressed = pressedNow
     }
 
     @JvmStatic
     @SubscribeEvent
     fun onKeyInput(e: InputEvent.KeyInputEvent) {
-        if(Minecraft.getMinecraft().thePlayer == null) return
+        if (Minecraft.getMinecraft().thePlayer == null) return
+        else if (Keyboard.getEventKey() != statusKey.keyCode) return
+        syncIfChanged(Keyboard.getEventKeyState())
+    }
 
-        val keyPressedNow = if(statusKey.keyCode >= 0) {
-            Keyboard.isKeyDown(statusKey.keyCode)
-        } else {
-            val button = Mouse.getEventButton()
-            if(button == -1) {
-                keyPressed
-            } else {
-                statusKey.keyCode + 100 == button && Mouse.getEventButtonState()
-            }
-        }
-        if(keyPressedNow != keyPressed) {
-            BanditNetwork.syncStatusToServer(keyPressedNow)
-            keyPressed = keyPressedNow
+    @JvmStatic
+    @SubscribeEvent
+    fun onMouseInput(e: InputEvent.MouseInputEvent) {
+        if (Minecraft.getMinecraft().thePlayer == null) return
+        if (statusKey.keyCode < -1 && Mouse.getEventButton() == (statusKey.keyCode + 100)){
+            syncIfChanged(Mouse.getEventButtonState())
         }
     }
 
-    fun onMouseInput(d: Int): Boolean {
-        VeinMiningHUD.withActiveMenu {
-            if(d < 0) {
-                this.move(1)
-                return true
-            } else if(d > 0) {
-                this.move(-1)
-                return true
+    fun onMouseScrollCancelable(d: Int): Boolean {
+        if (statusKey.isKeyPressed){
+            VeinMiningHUD.withActiveMenu {
+                if(d < 0) {
+                    this.move(1)
+                    return true
+                } else if(d > 0) {
+                    this.move(-1)
+                    return true
+                }
             }
         }
         return false

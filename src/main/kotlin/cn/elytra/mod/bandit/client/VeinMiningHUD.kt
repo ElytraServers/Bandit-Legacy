@@ -187,6 +187,7 @@ object VeinMiningHUD {
                     VeinMiningNoticeType.TASK_HALT_HINT -> I18n.format("bandit.message.task-halt-hint")
                     VeinMiningNoticeType.TASK_STOP_KEY_RELEASE -> I18n.format("bandit.message.task-stop.key-release")
                     VeinMiningNoticeType.TASK_STOP_FOR_COMMAND -> I18n.format("bandit.message.task-stop.for-command")
+                    VeinMiningNoticeType.TASK_STOP_BECAUSE_TOOL_MAX_DAMAGE -> I18n.format("bandit.message.task-stop.tool-max-damage")
                     VeinMiningNoticeType.TASK_DONE -> {
                         val statBlocksMined = notice.extraData["statBlocksMined"] ?: 0
                         val statItemDropped = notice.extraData["statItemDropped"] ?: 0

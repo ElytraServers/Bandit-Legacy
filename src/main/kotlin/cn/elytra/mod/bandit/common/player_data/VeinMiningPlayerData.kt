@@ -14,6 +14,7 @@ import cn.elytra.mod.bandit.mining.exception.CommandCancellation
 import cn.elytra.mod.bandit.mining.exception.FriendlyCancellationException
 import cn.elytra.mod.bandit.mining.exception.KeyReleaseCancellation
 import cn.elytra.mod.bandit.mining.exception.PlayerLeftCancellation
+import cn.elytra.mod.bandit.mining.exception.ToolMaxDamage
 import cn.elytra.mod.bandit.mining.executor.BlockPosCacheableExecutorGenerator
 import cn.elytra.mod.bandit.mining.executor.VeinMiningExecutorGenerator
 import cn.elytra.mod.bandit.mining.filter.VeinMiningBlockFilter
@@ -244,7 +245,7 @@ data class VeinMiningPlayerData(
             BanditMod.logger.info("Cached #${executionId}")
             if(it != null) {
                 when(it) {
-                    is KeyReleaseCancellation, is CommandCancellation, is PlayerLeftCancellation -> {
+                    is FriendlyCancellationException -> {
                         /* ignored */
                     }
 
@@ -325,7 +326,7 @@ data class VeinMiningPlayerData(
                 is KeyReleaseCancellation -> {
                     BanditNetwork.pushSimpleNoticeToClient(player.asMP,
                         noticeType = VeinMiningNoticeType.TASK_STOP_KEY_RELEASE,
-                        fadeDelay = 10,
+                        fadeDelay = 40,
                         fadeTicks = 20
                     )
                 }
@@ -333,7 +334,15 @@ data class VeinMiningPlayerData(
                 is CommandCancellation -> {
                     BanditNetwork.pushSimpleNoticeToClient(player.asMP,
                         noticeType = VeinMiningNoticeType.TASK_STOP_FOR_COMMAND,
-                        fadeDelay = 10,
+                        fadeDelay = 40,
+                        fadeTicks = 20
+                    )
+                }
+
+                is ToolMaxDamage -> {
+                    BanditNetwork.pushSimpleNoticeToClient(player.asMP,
+                        noticeType = VeinMiningNoticeType.TASK_STOP_BECAUSE_TOOL_MAX_DAMAGE,
+                        fadeDelay = 40,
                         fadeTicks = 20
                     )
                 }
