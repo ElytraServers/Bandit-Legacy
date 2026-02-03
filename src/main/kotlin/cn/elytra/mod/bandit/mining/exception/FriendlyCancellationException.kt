@@ -25,3 +25,8 @@ class CommandCancellation : FriendlyCancellationException("Cancelled because of 
  * The exception represents the vein-mining task was cancelled by the player because the player left
  */
 class PlayerLeftCancellation : FriendlyCancellationException("Cancelled because the player left")
+
+/**
+ * The exception represents the vein-mining task was cancelled because the player failed to destroy the blocks
+ */
+class ToolMaxDamage : FriendlyCancellationException("Cancelled because the player failed to destroy the blocks.")
