@@ -15,6 +15,8 @@ class LargeScanExecutorGenerator(
 ) : SequencedVeinMiningExecutorGenerator() {
     constructor(radius: Int) : this(radius, radius)
 
+    override val name: String = "large-scan"
+
     override fun createSequence(context: VeinMiningContext): Flow<BlockPos> =
         flow {
             val x = context.center.x
@@ -31,9 +33,8 @@ class LargeScanExecutorGenerator(
                     }
                 }
             }
-        // FIX: the block can possibly not loaded, causing a CME when not loading it in the server thread.
-        // this may impact on the performance of executing large-scan.
-        }.flowOn(BanditCoroutines.ServerThreadDispatcher)
-
-    override fun getUnlocalizedName(): String = "bandit.executor.large-scan"
+        }
+            // FIX: the block can possibly not loaded, causing a CME when not loading it in the server thread.
+            // this may impact on the performance of executing large-scan.
+            .flowOn(BanditCoroutines.ServerThreadDispatcher)
 }

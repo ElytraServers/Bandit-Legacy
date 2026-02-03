@@ -16,5 +16,7 @@ pluginManagement {
 }
 
 plugins {
-    id("com.gtnewhorizons.gtnhsettingsconvention") version ("1.0.41")
+    // FIXME: wait for GTNHGradle to merge the PR
+    // See: https://github.com/GTNewHorizons/GTNHGradle/pull/73
+    id("com.gtnewhorizons.gtnhsettingsconvention") version ("99.99.99")
 }

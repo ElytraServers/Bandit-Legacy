@@ -5,23 +5,16 @@ import com.gtnewhorizon.gtnhlib.blockpos.BlockPos
 
 @Suppress("FunctionName")
 fun DelegatedBlockFilter(
-    unlocalizedName: String,
+    name: String,
     delegate: (context: VeinMiningContext, pos: BlockPos) -> Boolean,
-): VeinMiningBlockFilter {
-    return object : VeinMiningBlockFilter {
+): VeinMiningBlockFilter =
+    object : VeinMiningBlockFilter {
+        override val name: String = name
+
         override fun isBlockMatching(
             context: VeinMiningContext,
             pos: BlockPos,
-        ): Boolean {
-            return delegate(context, pos)
-        }
+        ): Boolean = delegate(context, pos)
 
-        override fun toString(): String {
-            return "DelegatedBlockFilter{name=${unlocalizedName}, delegate=${delegate}}"
-        }
-
-        override fun getUnlocalizedName(): String {
-            return unlocalizedName
-        }
+        override fun toString(): String = "DelegatedBlockFilter{name=$name, delegate=$delegate}"
     }
-}
