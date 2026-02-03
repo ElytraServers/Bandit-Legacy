@@ -33,4 +33,24 @@ object ExecutorGeneratorRegistry {
     }
 
     fun all(): Map<Int, VeinMiningExecutorGenerator> = executorGeneratorMap.toMap()
+
+    fun isRegistered(id: Int): Boolean {
+        return id in executorGeneratorMap
+    }
+
+    fun getUnlocalizedName(id: Int): String? {
+        return executorGeneratorMap[id]?.getUnlocalizedName()
+    }
+
+    fun resolveExecutorId(raw: String): Int? {
+        val key = raw.trim().lowercase()
+
+        key.toIntOrNull()?.takeIf(::isRegistered)
+            ?.let { return it }
+
+        return executorGeneratorMap.entries.firstOrNull { (_, executor) ->
+            val name = executor.getUnlocalizedName().lowercase()
+            name == key || name.substringAfterLast('.') == key
+        }?.key
+    }
 }

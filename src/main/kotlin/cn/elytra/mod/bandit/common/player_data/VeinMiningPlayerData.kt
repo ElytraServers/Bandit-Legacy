@@ -265,7 +265,15 @@ data class VeinMiningPlayerData(
                 // stop precalculate job and continue to start vein mining
                 TypedJob.JobType.VeinMiningPrecalculating -> currentJob = null
                 // stop if there is another vein mining job
-                TypedJob.JobType.VeinMining -> return
+                TypedJob.JobType.VeinMining -> {
+                    val player = getPlayer()
+                    BanditNetwork.pushSimpleNoticeToClient(player.asMP,
+                        noticeType = VeinMiningNoticeType.TASK_BLOCKED,
+                        fadeDelay = 10,
+                        fadeTicks = 20
+                    )
+                    return
+                }
             }
         }
 
@@ -352,7 +360,7 @@ data class VeinMiningPlayerData(
                     "statBlocksMined" to context.statBlocksMined.get(),
                     "statItemDropped" to context.statItemDropped.values.sum()
                 ),
-                fadeDelay = 40,
+                fadeDelay = 100,
                 fadeTicks = 20
             )
 
