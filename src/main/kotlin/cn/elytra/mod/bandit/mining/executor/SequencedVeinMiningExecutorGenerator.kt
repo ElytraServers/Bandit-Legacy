@@ -63,7 +63,7 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
             context.getPlayer().theItemInWorldManager.tryHarvestBlock(pos.x, pos.y, pos.z)
         }
 
-        when(context.harvestedDropTiming) {
+        when (context.harvestedDropTiming) {
             VeinMiningContext.DropTiming.IMMEDIATELY -> {
                 dropItemAt(context, drops)
                 dropXpAt(context, xpValue)
@@ -89,7 +89,7 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
      * if the context prefers. This function is called in Server Thread, so it is safe to do anything!
      */
     protected open fun onBlockHarvestDone(context: VeinMiningContext) {
-        when(context.harvestedDropTiming) {
+        when (context.harvestedDropTiming) {
             VeinMiningContext.DropTiming.IMMEDIATELY -> {
             }
 
@@ -115,7 +115,7 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
      * @see dropXpAt
      */
     protected fun getDropPosition(context: VeinMiningContext): Vec3 {
-        return when(context.harvestedDropPosition) {
+        return when (context.harvestedDropPosition) {
             DropPosition.DROP_AT_START -> Vec3.createVectorHelper(
                 context.center.x.toDouble(),
                 context.center.y.toDouble(),
@@ -145,7 +145,7 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
     protected open fun dropXpAt(context: VeinMiningContext, xpValue: Int) {
         val pos = getDropPosition(context)
         var xpValueRemaining = xpValue
-        while(xpValueRemaining > 0) {
+        while (xpValueRemaining > 0) {
             val xpSplit = EntityXPOrb.getXPSplit(xpValueRemaining)
             xpValueRemaining -= xpSplit
             context.world.spawnEntityInWorld(
@@ -158,18 +158,21 @@ abstract class SequencedVeinMiningExecutorGenerator : VeinMiningExecutorGenerato
     override fun generate(context: VeinMiningContext): suspend () -> Unit {
         return suspend {
             val blockPosFlow = context.precalculatedBlockPosList?.asFlow() ?: createSequence(context)
-            blockPosFlow
-                .take(context.veinMiningMaxCountLimit)
-                .chunked(context.veinMiningCountPerOperation)
-                .collect { blockPosChunk ->
-                    // run in server thread
-                    withContext(BanditCoroutines.ServerThreadDispatcher) {
-                        // do the actual block harvesting
-                        blockPosChunk.forEach { doBlockHarvestOn(context, it) }
+            try {
+                blockPosFlow
+                    .take(context.veinMiningMaxCountLimit)
+                    .chunked(context.veinMiningCountPerOperation)
+                    .collect { blockPosChunk ->
+                        // run in server thread
+                        withContext(BanditCoroutines.ServerThreadDispatcher) {
+                            // do the actual block harvesting
+                            blockPosChunk.forEach { doBlockHarvestOn(context, it) }
+                        }
                     }
-                }
-            // do the clean-up
-            onBlockHarvestDone(context)
+            } finally {
+                // do the clean-up
+                onBlockHarvestDone(context)
+            }
         }
     }
 }
