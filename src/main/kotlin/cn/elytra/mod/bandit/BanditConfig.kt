@@ -4,7 +4,6 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent
 import net.minecraftforge.common.config.Configuration
 
 object BanditConfig {
-
     lateinit var config: Configuration
 
     fun init(e: FMLPreInitializationEvent) {
@@ -23,7 +22,7 @@ object BanditConfig {
                         BanditMod.logger.error("Failed to invoke ${it.name}", e)
                     }
                 }
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             BanditMod.logger.error("Failed to initialize configuration", e)
         }
 
@@ -45,5 +44,4 @@ object BanditConfig {
 
     val largeScanRadiusY: Int
         @ConfigGetter get() = config.getInt("large-scan-radius-y", "executor", 32, 1, Int.MAX_VALUE, "")
-
 }
